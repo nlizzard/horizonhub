@@ -1,0 +1,43 @@
+# Maven / Java build output
+**/target/
+**/out/
+*.class
+
+# Logs
+*.log
+logs/
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# JetBrains IDE
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+~$*
+
+# Environment / local overrides
+.env
+.env.*
+
+# Keep Maven wrapper and project files tracked
+!.mvn/
+!.mvn/wrapper/
+!mvnw
+!mvnw.cmd
+
