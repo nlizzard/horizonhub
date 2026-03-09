@@ -1,12 +1,15 @@
 package com.nlizzard.horizonhub.controller;
 
+import com.nlizzard.horizonhub.controller.basecontroller.ABaseController;
+import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class HelloController {
+public class HelloController extends ABaseController {
     @GetMapping("/hello")
-    public String hello() {
-        return "Hello, HorizonHub Web!";
+    public ResponseVO<String> hello() {
+        String data = "Hello, HorizonHub! web";
+        return getSuccessResponseVO(data);
     }
 }

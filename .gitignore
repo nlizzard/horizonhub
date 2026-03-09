@@ -1,5 +1,6 @@
 # Maven / Java build output
 **/target/
+**/target/**
 **/out/
 *.class
 
@@ -40,4 +41,3 @@ $RECYCLE.BIN/
 !.mvn/wrapper/
 !mvnw
 !mvnw.cmd
-

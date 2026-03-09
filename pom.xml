@@ -27,6 +27,17 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.5.25</logback.version>
         <spring-boot.version>3.5.7</spring-boot.version>
+        <mybatis.version>3.0.5</mybatis.version>
+        <mysql.version>8.0.33</mysql.version>
+        <aspectjweaver.version>1.9.24</aspectjweaver.version>
+        <okhttp3.version>4.12.0</okhttp3.version>
+<!--    <fastjson.version>1.2.66</fastjson.version>-->
+        <jackson.version>2.18.6</jackson.version>
+        <commons.lang3.version>3.14.0</commons.lang3.version>
+        <commons.codec.version>1.16.1</commons.codec.version>
+        <commons.io.version>2.14.0</commons.io.version>
+        <tomcat.version>10.1.52</tomcat.version>
+        <druid.version>1.2.27</druid.version>
     </properties>
 
     <dependencyManagement>
@@ -41,6 +52,75 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-core</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+            <!--mybatis-->
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <!--druid-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid-spring-boot-starter</artifactId>
+                <version>${druid.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-mail</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+            <!-- 数据库-->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!--切面-->
+            <dependency>
+                <groupId>org.aspectj</groupId>
+                <artifactId>aspectjweaver</artifactId>
+                <version>${aspectjweaver.version}</version>
+            </dependency>
+
+            <!--okhttp-->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+
+            <!--fastjson-->
+<!--            <dependency>-->
+<!--                <groupId>com.alibaba</groupId>-->
+<!--                <artifactId>fastjson</artifactId>-->
+<!--                <version>${fastjson.version}</version>-->
+<!--            </dependency>-->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons.lang3.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons.codec.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons.io.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

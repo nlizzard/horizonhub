@@ -1,0 +1,61 @@
+package com.nlizzard.horizonhub.service;
+
+import com.nlizzard.horizonhub.entity.pojo.SysSetting;
+import com.nlizzard.horizonhub.entity.query.SysSettingQuery;
+import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+
+import java.util.List;
+
+/**
+ * @Description:系统设置信息Service
+ * @author:nlizzard
+ * @date:2026/03/08
+ */
+public interface SysSettingService {
+
+    /**
+     * 根据条件查询列表
+     */
+    List<SysSetting> findListByParam(SysSettingQuery query);
+
+    /**
+     * 根据条件查询数量
+     */
+    Integer findCountByParam(SysSettingQuery query);
+
+    /**
+     * 分页查询
+     */
+    PaginationResultVO<SysSetting> findListByPage(SysSettingQuery query);
+
+    /**
+     * 新增
+     */
+    Integer add(SysSetting bean);
+
+    /**
+     * 批量新增
+     */
+    Integer addBatch(List<SysSetting> listBean);
+
+    /**
+     * 批量新增或修改
+     */
+    Integer addOrUpdateBatch(List<SysSetting> listBean);
+
+    /**
+     * 根据Code查询
+     */
+    SysSetting getSysSettingByCode(String code);
+
+    /**
+     * 根据Code更新
+     */
+    Integer updateSysSettingByCode(SysSetting bean, String code);
+
+    /**
+     * 根据Code删除
+     */
+    Integer deleteSysSettingByCode(String code);
+
+}

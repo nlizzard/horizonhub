@@ -1,0 +1,61 @@
+package com.nlizzard.horizonhub.service;
+
+import com.nlizzard.horizonhub.entity.pojo.ForumComment;
+import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
+import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+
+import java.util.List;
+
+/**
+ * @Description:评论Service
+ * @author:nlizzard
+ * @date:2026/03/08
+ */
+public interface ForumCommentService {
+
+    /**
+     * 根据条件查询列表
+     */
+    List<ForumComment> findListByParam(ForumCommentQuery query);
+
+    /**
+     * 根据条件查询数量
+     */
+    Integer findCountByParam(ForumCommentQuery query);
+
+    /**
+     * 分页查询
+     */
+    PaginationResultVO<ForumComment> findListByPage(ForumCommentQuery query);
+
+    /**
+     * 新增
+     */
+    Integer add(ForumComment bean);
+
+    /**
+     * 批量新增
+     */
+    Integer addBatch(List<ForumComment> listBean);
+
+    /**
+     * 批量新增或修改
+     */
+    Integer addOrUpdateBatch(List<ForumComment> listBean);
+
+    /**
+     * 根据CommentId查询
+     */
+    ForumComment getForumCommentByCommentId(Integer commentId);
+
+    /**
+     * 根据CommentId更新
+     */
+    Integer updateForumCommentByCommentId(ForumComment bean, Integer commentId);
+
+    /**
+     * 根据CommentId删除
+     */
+    Integer deleteForumCommentByCommentId(Integer commentId);
+
+}
