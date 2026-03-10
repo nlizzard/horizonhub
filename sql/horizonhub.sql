@@ -37,7 +37,7 @@ CREATE TABLE `forum_article` (
   `board_name` varchar(50) DEFAULT NULL COMMENT '板块名称',
   `p_board_id` int(11) DEFAULT NULL COMMENT '父级板块ID',
   `p_board_name` varchar(50) DEFAULT NULL COMMENT '父板块名称',
-  `user_id` varchar(15) NOT NULL COMMENT '用户ID',
+  `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `nick_name` varchar(20) NOT NULL COMMENT '昵称',
   `user_ip_address` varchar(100) DEFAULT NULL COMMENT '最后登录ip地址',
   `title` varchar(150) NOT NULL COMMENT '标题',
@@ -70,7 +70,7 @@ DROP TABLE IF EXISTS `forum_article_attachment`;
 CREATE TABLE `forum_article_attachment` (
   `file_id` varchar(15) NOT NULL COMMENT '文件ID',
   `article_id` varchar(15) NOT NULL COMMENT '文章ID',
-  `user_id` varchar(15) DEFAULT NULL COMMENT '用户id',
+  `user_id` varchar(19) DEFAULT NULL COMMENT '用户id',
   `file_size` bigint(20) DEFAULT NULL COMMENT '文件大小',
   `file_name` varchar(200) DEFAULT NULL COMMENT '文件名称',
   `download_count` int(11) DEFAULT NULL COMMENT '下载次数',
@@ -88,7 +88,7 @@ CREATE TABLE `forum_article_attachment` (
 DROP TABLE IF EXISTS `forum_article_attachment_download`;
 CREATE TABLE `forum_article_attachment_download` (
   `file_id` varchar(15) NOT NULL COMMENT '文件ID',
-  `user_id` varchar(15) NOT NULL COMMENT '用户id',
+  `user_id` varchar(19) NOT NULL COMMENT '用户id',
   `article_id` varchar(15) NOT NULL COMMENT '文章ID',
   `download_count` int(11) DEFAULT '1' COMMENT '文件下载次数',
   PRIMARY KEY (`file_id`,`user_id`)
@@ -119,10 +119,10 @@ CREATE TABLE `forum_comment` (
   `article_id` varchar(15) NOT NULL COMMENT '文章ID',
   `content` varchar(800) DEFAULT NULL COMMENT '回复内容',
   `img_path` varchar(150) DEFAULT NULL COMMENT '图片',
-  `user_id` varchar(15) NOT NULL COMMENT '用户ID',
+  `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `nick_name` varchar(20) DEFAULT NULL COMMENT '昵称',
   `user_ip_address` varchar(100) DEFAULT NULL COMMENT '用户ip地址',
-  `reply_user_id` varchar(15) DEFAULT NULL COMMENT '回复人ID',
+  `reply_user_id` varchar(19) DEFAULT NULL COMMENT '回复人ID',
   `reply_nick_name` varchar(20) DEFAULT NULL COMMENT '回复人昵称',
   `top_type` tinyint(4) DEFAULT '0' COMMENT '0:未置顶  1:置顶',
   `post_time` datetime DEFAULT NULL COMMENT '发布时间',
@@ -145,9 +145,9 @@ CREATE TABLE `like_record` (
   `op_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `op_type` tinyint(4) DEFAULT NULL COMMENT '操作类型0:文章点赞 1:评论点赞',
   `object_id` varchar(15) NOT NULL COMMENT '主体ID',
-  `user_id` varchar(15) NOT NULL COMMENT '用户ID',
+  `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `create_time` datetime DEFAULT NULL COMMENT '发布时间',
-  `author_user_id` varchar(15) DEFAULT NULL COMMENT '主体作者ID',
+  `author_user_id` varchar(19) DEFAULT NULL COMMENT '主体作者ID',
   PRIMARY KEY (`op_id`),
   UNIQUE KEY `idx_key` (`object_id`,`user_id`,`op_type`) USING BTREE,
   KEY `idx_user_id` (`user_id`,`op_type`)
@@ -168,7 +168,7 @@ CREATE TABLE `sys_setting` (
 -- ----------------------------
 DROP TABLE IF EXISTS `user_info`;
 CREATE TABLE `user_info` (
-  `user_id` varchar(15) NOT NULL COMMENT '用户ID',
+  `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `nick_name` varchar(20) DEFAULT NULL COMMENT '昵称',
   `email` varchar(150) DEFAULT NULL COMMENT '邮箱',
   `password` varchar(50) DEFAULT NULL COMMENT '密码',
@@ -192,7 +192,7 @@ CREATE TABLE `user_info` (
 DROP TABLE IF EXISTS `user_integral_record`;
 CREATE TABLE `user_integral_record` (
   `record_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '记录ID',
-  `user_id` varchar(15) DEFAULT NULL COMMENT '用户ID',
+  `user_id` varchar(19) DEFAULT NULL COMMENT '用户ID',
   `oper_type` tinyint(4) DEFAULT NULL COMMENT '操作类型',
   `integral` int(11) DEFAULT NULL COMMENT '积分',
   `create_time` datetime DEFAULT NULL COMMENT '创建时间',
@@ -205,11 +205,11 @@ CREATE TABLE `user_integral_record` (
 DROP TABLE IF EXISTS `user_message`;
 CREATE TABLE `user_message` (
   `message_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-  `received_user_id` varchar(15) DEFAULT NULL COMMENT '接收人用户ID',
+  `received_user_id` varchar(19) DEFAULT NULL COMMENT '接收人用户ID',
   `article_id` varchar(15) DEFAULT NULL COMMENT '文章ID',
   `article_title` varchar(150) DEFAULT NULL COMMENT '文章标题',
   `comment_id` int(11) DEFAULT NULL COMMENT '评论ID',
-  `send_user_id` varchar(15) DEFAULT NULL COMMENT '发送人用户ID',
+  `send_user_id` varchar(19) DEFAULT NULL COMMENT '发送人用户ID',
   `send_nick_name` varchar(20) DEFAULT NULL COMMENT '发送人昵称',
   `message_type` tinyint(4) DEFAULT NULL COMMENT '0:系统消息 1:评论 2:文章点赞  3:评论点赞 4:附件下载',
   `message_content` varchar(1000) DEFAULT NULL COMMENT '消息内容',
@@ -227,4 +227,4 @@ INSERT INTO `sys_setting` VALUES ('comment', '{\"commentDayCountThreshold\":50,\
 INSERT INTO `sys_setting` VALUES ('email', '{\"emailContent\":\"你好，您的邮箱验证码是：%s，15分钟有效\",\"emailTitle\":\"邮箱验证码--EasyBBS\"}');
 INSERT INTO `sys_setting` VALUES ('like', '{\"likeDayCountThreshold\":50}');
 INSERT INTO `sys_setting` VALUES ('post', '{\"attachmentSize\":1,\"dayImageUploadCount\":50,\"postDayCountThreshold\":50,\"postIntegral\":1}');
-INSERT INTO `sys_setting` VALUES ('register', '{\"registerWelcomInfo\":\"社区欢迎你，以后的日子里，有老罗陪伴你一起学编程\"}');
+INSERT INTO `sys_setting` VALUES ('register', '{\"registerWelcomeInfo\":\"社区欢迎你\"}');

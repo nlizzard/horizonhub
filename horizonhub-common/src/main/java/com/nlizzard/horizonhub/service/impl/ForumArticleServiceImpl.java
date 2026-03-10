@@ -1,10 +1,10 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
-import com.nlizzard.horizonhub.enums.PageSize;
 import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
 import com.nlizzard.horizonhub.service.ForumArticleService;
 import jakarta.annotation.Resource;

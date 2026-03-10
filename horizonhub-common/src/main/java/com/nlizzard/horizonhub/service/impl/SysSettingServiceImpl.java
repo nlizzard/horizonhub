@@ -1,16 +1,25 @@
 package com.nlizzard.horizonhub.service.impl;
 
-import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
-import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
+import com.nlizzard.horizonhub.entity.enums.PageSize;
+import com.nlizzard.horizonhub.entity.enums.SysSettingCodeEnum;
 import com.nlizzard.horizonhub.entity.pojo.SysSetting;
 import com.nlizzard.horizonhub.entity.query.SysSettingQuery;
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
+import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.mappers.SysSettingMapper;
 import com.nlizzard.horizonhub.service.SysSettingService;
+import com.nlizzard.horizonhub.utils.JsonUtils;
+import com.nlizzard.horizonhub.utils.SysCacheUtils;
+import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
-
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -20,6 +29,8 @@ import java.util.List;
  */
 @Service("sysSettingService")
 public class SysSettingServiceImpl implements SysSettingService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SysSettingServiceImpl.class);
 
     @Resource
     private SysSettingMapper<SysSetting, SysSettingQuery> sysSettingMapper;
@@ -107,4 +118,41 @@ public class SysSettingServiceImpl implements SysSettingService {
         return this.sysSettingMapper.deleteByCode(code);
     }
 
+    /**
+     * 将系统设置初始化到内存中  在系统启动时调用  将系统设置加载到内存中  以便后续使用  避免每次查询数据库获取系统设置
+     */
+    @Override
+    public void initSysSettingToCache() {
+        try {
+            SysSettingDto sysSettingDto = new SysSettingDto();
+            List<SysSetting> sysSettinglist = this.findListByParam(new SysSettingQuery());
+            Class<SysSettingDto> clazz = SysSettingDto.class;
+            for (SysSetting sysSetting : sysSettinglist) {
+                // 具体配置json内容
+                String jsonContent = sysSetting.getJsonContent();
+                if (StringUtils.isBlank(jsonContent)) {
+                    continue;
+                }
+                // 根据code获取枚举类  以便后续根据枚举类反序列化json内容
+                SysSettingCodeEnum sysSettingCodeEnum = SysSettingCodeEnum.getByCode(sysSetting.getCode());
+                if (sysSettingCodeEnum == null) {
+                    logger.warn("系统设置code未找到对应枚举类，code: {}", sysSetting.getCode());
+                    continue;
+                }
+                PropertyDescriptor pd = new PropertyDescriptor(sysSettingCodeEnum.getPropName(), clazz);
+                Method writeMethod = pd.getWriteMethod();
+                // 取消Java语言访问检查，提升反射效率
+                writeMethod.setAccessible(true);
+                Object o = JsonUtils.json2Object(jsonContent, Class.forName(sysSettingCodeEnum.getClassZ()));
+                writeMethod.invoke(sysSettingDto, o);
+            }
+            SysCacheUtils.setSysSettingMap(sysSettingDto);
+            logger.info("系统设置写入内存成功");
+        } catch (Exception e) {
+            logger.error("系统设置写入内存失败", e);
+            throw new BusinessException("系统设置写入内存失败");
+        } finally {
+            logger.info("web后端系统准备就绪 :)");
+        }
+    }
 }

@@ -1,9 +1,9 @@
 package com.nlizzard.horizonhub.exception;
 
-import com.nlizzard.horizonhub.enums.ResponseCodeEnum;
+import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 
 //自定义业务异常类
-public class BusinessException extends RuntimeException{
+public class BusinessException extends RuntimeException {
 
     // 异常的响应代码枚举
     private ResponseCodeEnum codeEnum;

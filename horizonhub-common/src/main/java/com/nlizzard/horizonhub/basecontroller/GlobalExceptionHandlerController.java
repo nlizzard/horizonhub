@@ -1,11 +1,8 @@
-package com.nlizzard.horizonhub.controller.basecontroller;
+package com.nlizzard.horizonhub.basecontroller;
 
+import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
-
-import com.nlizzard.horizonhub.enums.ResponseCodeEnum;
-
 import com.nlizzard.horizonhub.exception.BusinessException;
-
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +15,9 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 //全局异常处理
 @RestControllerAdvice
-public class AGlobalExceptionHandlerController extends ABaseController {
+public class GlobalExceptionHandlerController extends BaseController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AGlobalExceptionHandlerController.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandlerController.class);
 
     @ExceptionHandler(value = Exception.class)
     Object handleException(Exception e, HttpServletRequest request) {
@@ -33,7 +30,7 @@ public class AGlobalExceptionHandlerController extends ABaseController {
             ajaxResponse.setStatus(STATUS_ERROR);
         } else if (e instanceof BusinessException biz) {
             //业务错误
-            ajaxResponse.setCode(biz.getCode());
+            ajaxResponse.setCode(biz.getCode() == null ? ResponseCodeEnum.CODE_600.getCode() : biz.getCode());
             ajaxResponse.setInfo(biz.getMessage());
             ajaxResponse.setStatus(STATUS_ERROR);
         } else if (e instanceof BindException) {

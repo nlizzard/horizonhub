@@ -1,10 +1,10 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.pojo.UserMessage;
 import com.nlizzard.horizonhub.entity.query.UserMessageQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
-import com.nlizzard.horizonhub.enums.PageSize;
 import com.nlizzard.horizonhub.mappers.UserMessageMapper;
 import com.nlizzard.horizonhub.service.UserMessageService;
 import jakarta.annotation.Resource;

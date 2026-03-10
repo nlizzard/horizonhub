@@ -1,16 +1,29 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import cn.hutool.core.lang.Snowflake;
+import cn.hutool.core.util.IdUtil;
+import cn.hutool.crypto.SecureUtil;
+import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.enums.*;
+import com.nlizzard.horizonhub.entity.pojo.UserInfo;
+import com.nlizzard.horizonhub.entity.pojo.UserIntegralRecord;
+import com.nlizzard.horizonhub.entity.pojo.UserMessage;
+import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
+import com.nlizzard.horizonhub.entity.query.UserIntegralRecordQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
-import com.nlizzard.horizonhub.entity.pojo.UserInfo;
-import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.mappers.UserInfoMapper;
+import com.nlizzard.horizonhub.mappers.UserIntegralRecordMapper;
+import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.service.UserInfoService;
-import org.springframework.stereotype.Service;
-
+import com.nlizzard.horizonhub.service.UserMessageService;
+import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -23,6 +36,15 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+    @Resource
+    private EmailCodeService emailCodeService;
+
+    @Resource
+    private UserIntegralRecordMapper<UserIntegralRecord, UserIntegralRecordQuery> userIntegralRecordMapper;
+
+    @Resource
+    private UserMessageService userMessageService;
 
     /**
      * 根据条件查询列表
@@ -155,4 +177,93 @@ public class UserInfoServiceImpl implements UserInfoService {
         return this.userInfoMapper.deleteByNickName(nickName);
     }
 
+    /**
+     * 注册账号接口
+     *
+     * @param email
+     * @param nickName
+     * @param password
+     * @param emailCode
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void register(String email, String nickName, String password, String emailCode) {
+        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+        if (null != userInfo) {
+            throw new BusinessException("邮箱账号已经存在");
+        }
+        UserInfo nickNameUser = this.userInfoMapper.selectByNickName(nickName);
+        if (null != nickNameUser) {
+            throw new BusinessException("昵称已经存在");
+        }
+
+        //校验邮箱验证码，如果不正确或者过期会抛出异常，成功则失效验证码
+        emailCodeService.checkCode(email, emailCode);
+
+        // 雪花算法生成用户ID
+        Snowflake snowflake = IdUtil.getSnowflake(1, 1);
+        String userId = snowflake.nextIdStr();
+        userInfo = new UserInfo();
+        userInfo.setUserId(userId);
+        userInfo.setNickName(nickName);
+        userInfo.setEmail(email);
+        userInfo.setPassword(SecureUtil.md5(password));
+        userInfo.setJoinTime(new Date());
+        userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
+        userInfo.setTotalIntegral(0);
+        userInfo.setCurrentIntegral(0);
+        this.userInfoMapper.insert(userInfo);
+
+        // 注册时赠送积分
+        updateUserIntegral(userId, UserIntegralOperTypeEnum.REGISTER, UserIntegralChangeTypeEnum.ADD.getChangeType(), Constants.REGISTER_GIFT_INTEGRAL);
+
+
+        // 记录系统消息
+        UserMessage userMessage = new UserMessage();
+        userMessage.setReceivedUserId(userId);
+        userMessage.setMessageType(MessageTypeEnum.SYS.getType());
+        userMessage.setCreateTime(new Date());
+        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+        // 系统设置中读取注册欢迎信息
+        userMessage.setMessageContent(SysCacheUtils.getSysSetting().getRegisterSetting().getRegisterWelcomeInfo());
+        userMessageService.add(userMessage);
+
+    }
+
+    /**
+     * 更新用户积分
+     *
+     * @param userId       用户ID
+     * @param operTypeEnum 操作类型枚举
+     * @param changeType   增加或减少类型，1-增加，-1-减少
+     * @param integral     变更的积分数值
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserIntegral(String userId, UserIntegralOperTypeEnum operTypeEnum, Integer changeType, Integer integral) {
+        integral = changeType * integral;
+        if (integral == 0) {
+            return;
+        }
+
+        UserInfo userInfo = userInfoMapper.selectByUserId(userId);
+        // 如果是减少积分，且当前积分不足以扣除，则将变更的积分数值调整为当前积分的相反数，确保用户积分不会变成负数
+        if (UserIntegralChangeTypeEnum.REDUCE.getChangeType().equals(changeType) && userInfo.getCurrentIntegral() + integral < 0) {
+            integral = changeType * userInfo.getCurrentIntegral();
+        }
+
+        // 新增积分变更记录
+        UserIntegralRecord record = new UserIntegralRecord();
+        record.setUserId(userId);
+        record.setOperType(operTypeEnum.getOperType());
+        record.setCreateTime(new Date());
+        record.setIntegral(integral);
+        userIntegralRecordMapper.insert(record);
+
+        // 更新用户积分
+        Integer count = this.userInfoMapper.updateIntegral(userId, integral);
+        if (count == 0) {
+            throw new BusinessException("更新用户积分失败");
+        }
+    }
 }

@@ -1,15 +1,14 @@
 package com.nlizzard.horizonhub.service.impl;
 
-import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
-import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.pojo.LikeRecord;
 import com.nlizzard.horizonhub.entity.query.LikeRecordQuery;
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
+import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
 import com.nlizzard.horizonhub.mappers.LikeRecordMapper;
 import com.nlizzard.horizonhub.service.LikeRecordService;
-import org.springframework.stereotype.Service;
-
 import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 

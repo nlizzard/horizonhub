@@ -1,15 +1,14 @@
 package com.nlizzard.horizonhub.service.impl;
 
-import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
-import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.pojo.ForumComment;
 import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
+import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
 import com.nlizzard.horizonhub.mappers.ForumCommentMapper;
 import com.nlizzard.horizonhub.service.ForumCommentService;
-import org.springframework.stereotype.Service;
-
 import jakarta.annotation.Resource;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 

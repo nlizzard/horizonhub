@@ -1,6 +1,6 @@
 package com.nlizzard.horizonhub.entity.query.basequery;
 
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.entity.enums.PageSize;
 
 //分页信息类
 public class SimplePage {

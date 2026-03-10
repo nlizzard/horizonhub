@@ -1,4 +1,4 @@
-package com.nlizzard.horizonhub.enums;
+package com.nlizzard.horizonhub.entity.enums;
 
 // 响应状态码枚举类
 public enum ResponseCodeEnum {

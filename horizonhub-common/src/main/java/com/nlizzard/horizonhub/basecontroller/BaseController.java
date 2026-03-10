@@ -1,10 +1,9 @@
-package com.nlizzard.horizonhub.controller.basecontroller;
+package com.nlizzard.horizonhub.basecontroller;
 
-import com.nlizzard.horizonhub.enums.ResponseCodeEnum;
-
+import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 
-public class ABaseController {
+public class BaseController {
 
     //成功状态信息
     protected static final String STATUS_SUCCESS = "success";

@@ -1,4 +1,4 @@
-package com.nlizzard.horizonhub.enums;
+package com.nlizzard.horizonhub.entity.enums;
 
 //日期时间格式化方式枚举类
 public enum DateTimePatternEnum {
@@ -10,7 +10,7 @@ public enum DateTimePatternEnum {
         this.pattern = pattern;
     }
 
-    public String getPattern(){
+    public String getPattern() {
         return pattern;
     }
 }

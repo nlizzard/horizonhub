@@ -1,4 +1,4 @@
-package com.nlizzard.horizonhub.enums;
+package com.nlizzard.horizonhub.entity.enums;
 
 //分页的枚举类
 public enum PageSize {

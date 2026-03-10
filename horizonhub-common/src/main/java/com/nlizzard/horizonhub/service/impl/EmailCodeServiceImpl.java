@@ -1,15 +1,32 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.config.WebConfig;
+import com.nlizzard.horizonhub.entity.dto.SysSetting4EmailDto;
+import com.nlizzard.horizonhub.entity.enums.PageSize;
+import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.entity.pojo.EmailCode;
+import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.query.EmailCodeQuery;
+import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
-import com.nlizzard.horizonhub.enums.PageSize;
+import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.mappers.EmailCodeMapper;
+import com.nlizzard.horizonhub.mappers.UserInfoMapper;
 import com.nlizzard.horizonhub.service.EmailCodeService;
+import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
+import jakarta.mail.internet.MimeMessage;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -20,8 +37,19 @@ import java.util.List;
 @Service("emailCodeService")
 public class EmailCodeServiceImpl implements EmailCodeService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmailCodeServiceImpl.class);
+
     @Resource
     private EmailCodeMapper<EmailCode, EmailCodeQuery> emailCodeMapper;
+
+    @Resource
+    private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
+
+    @Resource
+    private JavaMailSender javaMailSender;
+
+    @Resource
+    private WebConfig webConfig;
 
     /**
      * 根据条件查询列表
@@ -106,4 +134,88 @@ public class EmailCodeServiceImpl implements EmailCodeService {
         this.emailCodeMapper.deleteByEmailAndCode(email, code);
     }
 
+    /**
+     * 发送邮件验证码(重载方法)
+     *
+     * @param toEmail
+     * @param code
+     */
+    private void sendEmailCode(String toEmail, String code) {
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            //邮件发件人
+            helper.setFrom(webConfig.getSendUserName());
+            //邮件收件人 1或多个
+            helper.setTo(toEmail);
+
+            // TODO: 这里可以改成从数据库获取邮件模板，生成邮件内容
+            SysSetting4EmailDto emailDto = SysCacheUtils.getSysSetting().getEmailSetting();
+            //邮件主题
+            helper.setSubject(emailDto.getEmailTitle());
+            //邮件内容
+            helper.setText(String.format(emailDto.getEmailContent(), code));
+            //邮件发送时间
+            helper.setSentDate(new Date());
+            javaMailSender.send(message);
+        } catch (Exception e) {
+            logger.error("邮件发送失败", e);
+            throw new BusinessException("邮件发送失败");
+        }
+    }
+
+    /**
+     * 发送邮箱验证码
+     *
+     * @param toEmail 邮箱地址
+     * @param type    0-发送注册验证码，1-邮箱验证码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void sendEmailCode(String toEmail, Integer type) {
+        //如果是注册，校验邮箱是否已存在
+        if (type == 0) {
+            UserInfo userInfo = userInfoMapper.selectByEmail(toEmail);
+            if (null != userInfo) {
+                throw new BusinessException(ResponseCodeEnum.CODE_600.getCode(), "邮箱已经存在");
+            }
+        }
+        // 生成随机验证码
+        String code = RandomStringUtils.random(Constants.EMAIL_CODE_LENGTH, true, true);
+        // 是否使用邮箱发送邮件
+        if (webConfig.getIsSendEmailCode() != null && webConfig.getIsSendEmailCode()) {
+            // 调用重载方法发送验证码
+            sendEmailCode(toEmail, code);
+        }
+        // 打印在控制台
+        logger.info("发送邮箱验证码成功，邮箱：{}，验证码：{}", toEmail, code);
+        // 使旧的验证码全部失效
+        emailCodeMapper.disableEmailCode(toEmail);
+        // 创建新的验证码记录
+        EmailCode emailCode = new EmailCode();
+        emailCode.setCode(code);
+        emailCode.setEmail(toEmail);
+        emailCode.setStatus(0);
+        emailCode.setCreateTime(new Date());
+        emailCodeMapper.insert(emailCode);
+    }
+
+    /**
+     * 校验邮箱验证码
+     *
+     * @param email
+     * @param code
+     */
+    @Override
+    public void checkCode(String email, String code) {
+        EmailCode emailCode = emailCodeMapper.selectByEmailAndCode(email, code);
+        if (null == emailCode) {
+            throw new BusinessException("邮箱验证码不正确");
+        }
+        if (emailCode.getStatus() == 1 || System.currentTimeMillis() - emailCode.getCreateTime().getTime() > Constants.EMAIL_CODE_EXPIRED_MINUTE * 1000 * 60) {
+            throw new BusinessException("邮箱验证码已失效");
+        }
+        emailCodeMapper.disableEmailCode(email);
+    }
 }

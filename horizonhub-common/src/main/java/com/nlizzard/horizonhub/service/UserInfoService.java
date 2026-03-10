@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service;
 
+import com.nlizzard.horizonhub.entity.enums.UserIntegralOperTypeEnum;
 import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
@@ -88,4 +89,23 @@ public interface UserInfoService {
      */
     Integer deleteUserInfoByNickName(String nickName);
 
+    /**
+     * 注册账号接口
+     *
+     * @param email     邮箱
+     * @param nickName  昵称
+     * @param password  密码
+     * @param emailCode 邮箱验证码
+     */
+    void register(String email, String nickName, String password, String emailCode);
+
+    /**
+     * 更新用户积分
+     *
+     * @param userId       用户ID
+     * @param operTypeEnum 操作类型枚举
+     * @param changeType   增加或减少类型，1-增加，-1-减少
+     * @param integral     变更的积分数值
+     */
+    void updateUserIntegral(String userId, UserIntegralOperTypeEnum operTypeEnum, Integer changeType, Integer integral);
 }
