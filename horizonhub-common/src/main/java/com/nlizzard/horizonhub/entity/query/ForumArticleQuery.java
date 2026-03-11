@@ -11,440 +11,461 @@ import java.util.Date;
  * @date:2026/03/08
  */
 public class ForumArticleQuery extends BaseQuery {
-	/**
-	 * 文章ID
-	 */
-	private String articleId;
+    /**
+     * 文章ID
+     */
+    private String articleId;
 
-	private String articleIdFuzzy;
+    private String articleIdFuzzy;
 
-	/**
-	 * 板块ID
-	 */
-	private Integer boardId;
+    /**
+     * 板块ID
+     */
+    private Integer boardId;
 
-	/**
-	 * 板块名称
-	 */
-	private String boardName;
+    /**
+     * 板块名称
+     */
+    private String boardName;
 
-	private String boardNameFuzzy;
+    private String boardNameFuzzy;
 
-	/**
-	 * 父级板块ID
-	 */
-	private Integer pBoardId;
+    /**
+     * 父级板块ID
+     */
+    private Integer pBoardId;
 
-	/**
-	 * 父板块名称
-	 */
-	private String pBoardName;
+    /**
+     * 父板块名称
+     */
+    private String pBoardName;
 
-	private String pBoardNameFuzzy;
+    private String pBoardNameFuzzy;
 
-	/**
-	 * 用户ID
-	 */
-	private String userId;
+    /**
+     * 用户ID
+     */
+    private String userId;
 
-	private String userIdFuzzy;
+    /**
+     * 当前登录用户ID
+     */
+    private String currentUserId;
 
-	/**
-	 * 昵称
-	 */
-	private String nickName;
+    private String userIdFuzzy;
 
-	private String nickNameFuzzy;
+    /**
+     * 昵称
+     */
+    private String nickName;
 
-	/**
-	 * 最后登录ip地址
-	 */
-	private String userIpAddress;
+    private String nickNameFuzzy;
 
-	private String userIpAddressFuzzy;
+    /**
+     * 最后登录ip地址
+     */
+    private String userIpAddress;
 
-	/**
-	 * 标题
-	 */
-	private String title;
+    private String userIpAddressFuzzy;
 
-	private String titleFuzzy;
+    /**
+     * 标题
+     */
+    private String title;
 
-	/**
-	 * 封面
-	 */
-	private String cover;
+    private String titleFuzzy;
 
-	private String coverFuzzy;
+    /**
+     * 封面
+     */
+    private String cover;
 
-	/**
-	 * 内容
-	 */
-	private String content;
+    private String coverFuzzy;
 
-	private String contentFuzzy;
+    /**
+     * 内容
+     */
+    private String content;
 
-	/**
-	 * markdown内容
-	 */
-	private String markdownContent;
+    private String contentFuzzy;
 
-	private String markdownContentFuzzy;
+    /**
+     * markdown内容
+     */
+    private String markdownContent;
 
-	/**
-	 * 0:富文本编辑器 1:markdown编辑器
-	 */
-	private Integer editorType;
+    private String markdownContentFuzzy;
 
-	/**
-	 * 摘要
-	 */
-	private String summary;
+    /**
+     * 0:富文本编辑器 1:markdown编辑器
+     */
+    private Integer editorType;
 
-	private String summaryFuzzy;
+    /**
+     * 摘要
+     */
+    private String summary;
 
-	/**
-	 * 发布时间
-	 */
-	private Date postTime;
+    private String summaryFuzzy;
 
-	private String postTimeStart;
+    /**
+     * 发布时间
+     */
+    private Date postTime;
 
-	private String postTimeEnd;
+    private String postTimeStart;
 
-	/**
-	 * 最后更新时间
-	 */
-	private Date lastUpdateTime;
-
-	private String lastUpdateTimeStart;
-
-	private String lastUpdateTimeEnd;
-
-	/**
-	 * 阅读数量
-	 */
-	private Integer readCount;
-
-	/**
-	 * 点赞数
-	 */
-	private Integer goodCount;
-
-	/**
-	 * 评论数
-	 */
-	private Integer commentCount;
+    private String postTimeEnd;
 
-	/**
-	 * 0未置顶  1:已置顶
-	 */
-	private Integer topType;
-
-	/**
-	 * 0:没有附件  1:有附件
-	 */
-	private Integer attachmentType;
-
-	/**
-	 * -1已删除 0:待审核  1:已审核 
-	 */
-	private Integer status;
-
-	public void setArticleId(String articleId) {
-		this.articleId = articleId;
-	}
-
-	public String getArticleId() {
-		return this.articleId;
-	}
-
-	public void setBoardId(Integer boardId) {
-		this.boardId = boardId;
-	}
-
-	public Integer getBoardId() {
-		return this.boardId;
-	}
-
-	public void setBoardName(String boardName) {
-		this.boardName = boardName;
-	}
-
-	public String getBoardName() {
-		return this.boardName;
-	}
-
-	public void setPBoardId(Integer pBoardId) {
-		this.pBoardId = pBoardId;
-	}
-
-	public Integer getPBoardId() {
-		return this.pBoardId;
-	}
-
-	public void setPBoardName(String pBoardName) {
-		this.pBoardName = pBoardName;
-	}
-
-	public String getPBoardName() {
-		return this.pBoardName;
-	}
-
-	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-
-	public String getUserId() {
-		return this.userId;
-	}
-
-	public void setNickName(String nickName) {
-		this.nickName = nickName;
-	}
-
-	public String getNickName() {
-		return this.nickName;
-	}
-
-	public void setUserIpAddress(String userIpAddress) {
-		this.userIpAddress = userIpAddress;
-	}
-
-	public String getUserIpAddress() {
-		return this.userIpAddress;
-	}
-
-	public void setTitle(String title) {
-		this.title = title;
-	}
-
-	public String getTitle() {
-		return this.title;
-	}
-
-	public void setCover(String cover) {
-		this.cover = cover;
-	}
-
-	public String getCover() {
-		return this.cover;
-	}
-
-	public void setContent(String content) {
-		this.content = content;
-	}
-
-	public String getContent() {
-		return this.content;
-	}
-
-	public void setMarkdownContent(String markdownContent) {
-		this.markdownContent = markdownContent;
-	}
-
-	public String getMarkdownContent() {
-		return this.markdownContent;
-	}
-
-	public void setEditorType(Integer editorType) {
-		this.editorType = editorType;
-	}
-
-	public Integer getEditorType() {
-		return this.editorType;
-	}
-
-	public void setSummary(String summary) {
-		this.summary = summary;
-	}
-
-	public String getSummary() {
-		return this.summary;
-	}
-
-	public void setPostTime(Date postTime) {
-		this.postTime = postTime;
-	}
-
-	public Date getPostTime() {
-		return this.postTime;
-	}
-
-	public void setLastUpdateTime(Date lastUpdateTime) {
-		this.lastUpdateTime = lastUpdateTime;
-	}
-
-	public Date getLastUpdateTime() {
-		return this.lastUpdateTime;
-	}
-
-	public void setReadCount(Integer readCount) {
-		this.readCount = readCount;
-	}
-
-	public Integer getReadCount() {
-		return this.readCount;
-	}
-
-	public void setGoodCount(Integer goodCount) {
-		this.goodCount = goodCount;
-	}
-
-	public Integer getGoodCount() {
-		return this.goodCount;
-	}
-
-	public void setCommentCount(Integer commentCount) {
-		this.commentCount = commentCount;
-	}
-
-	public Integer getCommentCount() {
-		return this.commentCount;
-	}
-
-	public void setTopType(Integer topType) {
-		this.topType = topType;
-	}
-
-	public Integer getTopType() {
-		return this.topType;
-	}
-
-	public void setAttachmentType(Integer attachmentType) {
-		this.attachmentType = attachmentType;
-	}
-
-	public Integer getAttachmentType() {
-		return this.attachmentType;
-	}
-
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
-
-	public Integer getStatus() {
-		return this.status;
-	}
-
-	public void setArticleIdFuzzy(String articleIdFuzzy) {
-		this.articleIdFuzzy = articleIdFuzzy;
-	}
-
-	public String getArticleIdFuzzy() {
-		return this.articleIdFuzzy;
-	}
-
-	public void setBoardNameFuzzy(String boardNameFuzzy) {
-		this.boardNameFuzzy = boardNameFuzzy;
-	}
-
-	public String getBoardNameFuzzy() {
-		return this.boardNameFuzzy;
-	}
-
-	public void setPBoardNameFuzzy(String pBoardNameFuzzy) {
-		this.pBoardNameFuzzy = pBoardNameFuzzy;
-	}
-
-	public String getPBoardNameFuzzy() {
-		return this.pBoardNameFuzzy;
-	}
-
-	public void setUserIdFuzzy(String userIdFuzzy) {
-		this.userIdFuzzy = userIdFuzzy;
-	}
-
-	public String getUserIdFuzzy() {
-		return this.userIdFuzzy;
-	}
-
-	public void setNickNameFuzzy(String nickNameFuzzy) {
-		this.nickNameFuzzy = nickNameFuzzy;
-	}
-
-	public String getNickNameFuzzy() {
-		return this.nickNameFuzzy;
-	}
-
-	public void setUserIpAddressFuzzy(String userIpAddressFuzzy) {
-		this.userIpAddressFuzzy = userIpAddressFuzzy;
-	}
-
-	public String getUserIpAddressFuzzy() {
-		return this.userIpAddressFuzzy;
-	}
-
-	public void setTitleFuzzy(String titleFuzzy) {
-		this.titleFuzzy = titleFuzzy;
-	}
-
-	public String getTitleFuzzy() {
-		return this.titleFuzzy;
-	}
-
-	public void setCoverFuzzy(String coverFuzzy) {
-		this.coverFuzzy = coverFuzzy;
-	}
-
-	public String getCoverFuzzy() {
-		return this.coverFuzzy;
-	}
-
-	public void setContentFuzzy(String contentFuzzy) {
-		this.contentFuzzy = contentFuzzy;
-	}
-
-	public String getContentFuzzy() {
-		return this.contentFuzzy;
-	}
-
-	public void setMarkdownContentFuzzy(String markdownContentFuzzy) {
-		this.markdownContentFuzzy = markdownContentFuzzy;
-	}
-
-	public String getMarkdownContentFuzzy() {
-		return this.markdownContentFuzzy;
-	}
-
-	public void setSummaryFuzzy(String summaryFuzzy) {
-		this.summaryFuzzy = summaryFuzzy;
-	}
-
-	public String getSummaryFuzzy() {
-		return this.summaryFuzzy;
-	}
-
-	public void setPostTimeStart(String postTimeStart) {
-		this.postTimeStart = postTimeStart;
-	}
-
-	public String getPostTimeStart() {
-		return this.postTimeStart;
-	}
-
-	public void setPostTimeEnd(String postTimeEnd) {
-		this.postTimeEnd = postTimeEnd;
-	}
-
-	public String getPostTimeEnd() {
-		return this.postTimeEnd;
-	}
-
-	public void setLastUpdateTimeStart(String lastUpdateTimeStart) {
-		this.lastUpdateTimeStart = lastUpdateTimeStart;
-	}
-
-	public String getLastUpdateTimeStart() {
-		return this.lastUpdateTimeStart;
-	}
-
-	public void setLastUpdateTimeEnd(String lastUpdateTimeEnd) {
-		this.lastUpdateTimeEnd = lastUpdateTimeEnd;
-	}
-
-	public String getLastUpdateTimeEnd() {
-		return this.lastUpdateTimeEnd;
-	}
+    /**
+     * 最后更新时间
+     */
+    private Date lastUpdateTime;
+
+    private String lastUpdateTimeStart;
+
+    private String lastUpdateTimeEnd;
+
+    /**
+     * 阅读数量
+     */
+    private Integer readCount;
+
+    /**
+     * 点赞数
+     */
+    private Integer goodCount;
+
+    /**
+     * 评论数
+     */
+    private Integer commentCount;
+
+    /**
+     * 0未置顶  1:已置顶
+     */
+    private Integer topType;
+
+    /**
+     * 0:没有附件  1:有附件
+     */
+    private Integer attachmentType;
+
+    /**
+     * -1已删除 0:待审核  1:已审核
+     */
+    private Integer status;
+
+    public void setArticleId(String articleId) {
+        this.articleId = articleId;
+    }
+
+    public String getArticleId() {
+        return this.articleId;
+    }
+
+    public void setBoardId(Integer boardId) {
+        this.boardId = boardId;
+    }
+
+    public Integer getBoardId() {
+        return this.boardId;
+    }
+
+    public void setBoardName(String boardName) {
+        this.boardName = boardName;
+    }
+
+    public String getBoardName() {
+        return this.boardName;
+    }
+
+    public void setPBoardId(Integer pBoardId) {
+        this.pBoardId = pBoardId;
+    }
+
+    public Integer getPBoardId() {
+        return this.pBoardId;
+    }
+
+    public void setPBoardName(String pBoardName) {
+        this.pBoardName = pBoardName;
+    }
+
+    public String getPBoardName() {
+        return this.pBoardName;
+    }
+
+    public String getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(String currentUserId) {
+        this.currentUserId = currentUserId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getUserId() {
+        return this.userId;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public String getNickName() {
+        return this.nickName;
+    }
+
+    public void setUserIpAddress(String userIpAddress) {
+        this.userIpAddress = userIpAddress;
+    }
+
+    public String getUserIpAddress() {
+        return this.userIpAddress;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getTitle() {
+        return this.title;
+    }
+
+    public void setCover(String cover) {
+        this.cover = cover;
+    }
+
+    public String getCover() {
+        return this.cover;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public String getContent() {
+        return this.content;
+    }
+
+    public void setMarkdownContent(String markdownContent) {
+        this.markdownContent = markdownContent;
+    }
+
+    public String getMarkdownContent() {
+        return this.markdownContent;
+    }
+
+    public void setEditorType(Integer editorType) {
+        this.editorType = editorType;
+    }
+
+    public Integer getEditorType() {
+        return this.editorType;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getSummary() {
+        return this.summary;
+    }
+
+    public void setPostTime(Date postTime) {
+        this.postTime = postTime;
+    }
+
+    public Date getPostTime() {
+        return this.postTime;
+    }
+
+    public void setLastUpdateTime(Date lastUpdateTime) {
+        this.lastUpdateTime = lastUpdateTime;
+    }
+
+    public Date getLastUpdateTime() {
+        return this.lastUpdateTime;
+    }
+
+    public void setReadCount(Integer readCount) {
+        this.readCount = readCount;
+    }
+
+    public Integer getReadCount() {
+        return this.readCount;
+    }
+
+    public void setGoodCount(Integer goodCount) {
+        this.goodCount = goodCount;
+    }
+
+    public Integer getGoodCount() {
+        return this.goodCount;
+    }
+
+    public void setCommentCount(Integer commentCount) {
+        this.commentCount = commentCount;
+    }
+
+    public Integer getCommentCount() {
+        return this.commentCount;
+    }
+
+    public void setTopType(Integer topType) {
+        this.topType = topType;
+    }
+
+    public Integer getTopType() {
+        return this.topType;
+    }
+
+    public void setAttachmentType(Integer attachmentType) {
+        this.attachmentType = attachmentType;
+    }
+
+    public Integer getAttachmentType() {
+        return this.attachmentType;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Integer getStatus() {
+        return this.status;
+    }
+
+    public Integer getpBoardId() {
+        return pBoardId;
+    }
+
+    public void setpBoardId(Integer pBoardId) {
+        this.pBoardId = pBoardId;
+    }
+
+    public void setArticleIdFuzzy(String articleIdFuzzy) {
+        this.articleIdFuzzy = articleIdFuzzy;
+    }
+
+    public String getArticleIdFuzzy() {
+        return this.articleIdFuzzy;
+    }
+
+    public void setBoardNameFuzzy(String boardNameFuzzy) {
+        this.boardNameFuzzy = boardNameFuzzy;
+    }
+
+    public String getBoardNameFuzzy() {
+        return this.boardNameFuzzy;
+    }
+
+    public void setPBoardNameFuzzy(String pBoardNameFuzzy) {
+        this.pBoardNameFuzzy = pBoardNameFuzzy;
+    }
+
+    public String getPBoardNameFuzzy() {
+        return this.pBoardNameFuzzy;
+    }
+
+    public void setUserIdFuzzy(String userIdFuzzy) {
+        this.userIdFuzzy = userIdFuzzy;
+    }
+
+    public String getUserIdFuzzy() {
+        return this.userIdFuzzy;
+    }
+
+    public void setNickNameFuzzy(String nickNameFuzzy) {
+        this.nickNameFuzzy = nickNameFuzzy;
+    }
+
+    public String getNickNameFuzzy() {
+        return this.nickNameFuzzy;
+    }
+
+    public void setUserIpAddressFuzzy(String userIpAddressFuzzy) {
+        this.userIpAddressFuzzy = userIpAddressFuzzy;
+    }
+
+    public String getUserIpAddressFuzzy() {
+        return this.userIpAddressFuzzy;
+    }
+
+    public void setTitleFuzzy(String titleFuzzy) {
+        this.titleFuzzy = titleFuzzy;
+    }
+
+    public String getTitleFuzzy() {
+        return this.titleFuzzy;
+    }
+
+    public void setCoverFuzzy(String coverFuzzy) {
+        this.coverFuzzy = coverFuzzy;
+    }
+
+    public String getCoverFuzzy() {
+        return this.coverFuzzy;
+    }
+
+    public void setContentFuzzy(String contentFuzzy) {
+        this.contentFuzzy = contentFuzzy;
+    }
+
+    public String getContentFuzzy() {
+        return this.contentFuzzy;
+    }
+
+    public void setMarkdownContentFuzzy(String markdownContentFuzzy) {
+        this.markdownContentFuzzy = markdownContentFuzzy;
+    }
+
+    public String getMarkdownContentFuzzy() {
+        return this.markdownContentFuzzy;
+    }
+
+    public void setSummaryFuzzy(String summaryFuzzy) {
+        this.summaryFuzzy = summaryFuzzy;
+    }
+
+    public String getSummaryFuzzy() {
+        return this.summaryFuzzy;
+    }
+
+    public void setPostTimeStart(String postTimeStart) {
+        this.postTimeStart = postTimeStart;
+    }
+
+    public String getPostTimeStart() {
+        return this.postTimeStart;
+    }
+
+    public void setPostTimeEnd(String postTimeEnd) {
+        this.postTimeEnd = postTimeEnd;
+    }
+
+    public String getPostTimeEnd() {
+        return this.postTimeEnd;
+    }
+
+    public void setLastUpdateTimeStart(String lastUpdateTimeStart) {
+        this.lastUpdateTimeStart = lastUpdateTimeStart;
+    }
+
+    public String getLastUpdateTimeStart() {
+        return this.lastUpdateTimeStart;
+    }
+
+    public void setLastUpdateTimeEnd(String lastUpdateTimeEnd) {
+        this.lastUpdateTimeEnd = lastUpdateTimeEnd;
+    }
+
+    public String getLastUpdateTimeEnd() {
+        return this.lastUpdateTimeEnd;
+    }
 
 }

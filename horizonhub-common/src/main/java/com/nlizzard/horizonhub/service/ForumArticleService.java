@@ -58,4 +58,8 @@ public interface ForumArticleService {
      */
     Integer deleteForumArticleByArticleId(String articleId);
 
+    /**
+     * 文章详情获取
+     */
+    ForumArticle readArticle(String articleId);
 }

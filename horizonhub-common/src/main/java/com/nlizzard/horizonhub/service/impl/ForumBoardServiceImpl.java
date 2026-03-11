@@ -10,6 +10,7 @@ import com.nlizzard.horizonhub.service.ForumBoardService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -106,4 +107,29 @@ public class ForumBoardServiceImpl implements ForumBoardService {
         return this.forumBoardMapper.deleteByBoardId(boardId);
     }
 
+    /**
+     * 获取板块树
+     *
+     * @param postType 文章类型，1表示查询所有
+     */
+    @Override
+    public List<ForumBoard> getBoardTree(Integer postType) {
+        ForumBoardQuery forumBoardQuery = new ForumBoardQuery();
+        forumBoardQuery.setOrderBy("sort ASC");
+        forumBoardQuery.setPostType(postType);
+        List<ForumBoard> forumBoardList = forumBoardMapper.selectList(forumBoardQuery);
+        return convertLine2Tree(forumBoardList, 0);
+    }
+
+    // 递归算法，将线性结构转换为树形结构  TODO:后续可以优化为非递归算法，减少递归调用的性能开销
+    private List<ForumBoard> convertLine2Tree(List<ForumBoard> forumBoardList, Integer pBoardId) {
+        List<ForumBoard> treeList = new ArrayList<>();
+        for (ForumBoard forumBoard : forumBoardList) {
+            if (forumBoard.getPBoardId().equals(pBoardId)) {
+                forumBoard.setChildren(convertLine2Tree(forumBoardList, forumBoard.getBoardId()));
+                treeList.add(forumBoard);
+            }
+        }
+        return treeList;
+    }
 }

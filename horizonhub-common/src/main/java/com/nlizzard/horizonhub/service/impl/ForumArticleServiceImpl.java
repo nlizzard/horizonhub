@@ -1,10 +1,14 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import com.nlizzard.horizonhub.entity.enums.ArticleStatusEnum;
 import com.nlizzard.horizonhub.entity.enums.PageSize;
+import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
+import com.nlizzard.horizonhub.entity.enums.UpdateArticleCountTypeEnum;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
 import com.nlizzard.horizonhub.service.ForumArticleService;
 import jakarta.annotation.Resource;
@@ -106,4 +110,22 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         return this.forumArticleMapper.deleteByArticleId(articleId);
     }
 
+    /**
+     * 文章详情获取
+     *
+     * @param articleId
+     * @return
+     */
+    @Override
+    public ForumArticle readArticle(String articleId) {
+        ForumArticle forumArticle = this.forumArticleMapper.selectByArticleId(articleId);
+        if (forumArticle == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404);
+        }
+        // 只有审核通过的文章才增加阅读数
+        if (ArticleStatusEnum.AUDIT.getStatus().equals(forumArticle.getStatus())) {
+            forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.READ_COUNT.getType(), 1, articleId);
+        }
+        return forumArticle;
+    }
 }

@@ -4,6 +4,8 @@ import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.config.WebConfig;
+import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.*;
 import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.pojo.UserIntegralRecord;
@@ -18,13 +20,21 @@ import com.nlizzard.horizonhub.mappers.UserIntegralRecordMapper;
 import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.service.UserInfoService;
 import com.nlizzard.horizonhub.service.UserMessageService;
+import com.nlizzard.horizonhub.utils.JsonUtils;
+import com.nlizzard.horizonhub.utils.OKHttpUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Description:用户信息ServiceImpl
@@ -33,6 +43,8 @@ import java.util.List;
  */
 @Service("userInfoService")
 public class UserInfoServiceImpl implements UserInfoService {
+
+    public static final Logger logger = LoggerFactory.getLogger(UserInfoServiceImpl.class);
 
     @Resource
     private UserInfoMapper<UserInfo, UserInfoQuery> userInfoMapper;
@@ -45,6 +57,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private UserMessageService userMessageService;
+
+    @Resource
+    private WebConfig webConfig;
 
     /**
      * 根据条件查询列表
@@ -265,5 +280,81 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (count == 0) {
             throw new BusinessException("更新用户积分失败");
         }
+    }
+
+    /**
+     * 登录接口
+     *
+     * @param email     邮箱
+     * @param password  密码
+     * @param ipAddress 登录 IP 地址
+     * @return
+     */
+    @Override
+    public SessionWebUserDto login(String email, String password, String ipAddress) {
+        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+        if (null == userInfo || !userInfo.getPassword().equals(password)) {
+            throw new BusinessException("账号或者密码错误");
+        }
+        if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
+            throw new BusinessException("账号已禁用");
+        }
+        UserInfo updateInfo = new UserInfo();
+        updateInfo.setLastLoginTime(new Date());
+        updateInfo.setLastLoginIp(ipAddress);
+        // 根据登录 IP 地址获取所在地信息，更新最后登录所在地字段
+        Map<String, String> addressInfo = getIpAddress(ipAddress);
+        String province = addressInfo.get("pro");
+        province = StringUtils.isBlank(province) ? Constants.IP_PROVINCE_DEFAULT : province;
+        updateInfo.setLastLoginIpAddress(province);
+        // 更新用户信息（最后登录时间，最后登录ip，最后登录省份）
+        this.userInfoMapper.updateByUserId(updateInfo, userInfo.getUserId());
+        // 去除掉敏感字段，将用户信息转换成 SessionWebUserDto，存入 session 中
+        SessionWebUserDto sessionWebUserDto = new SessionWebUserDto();
+        sessionWebUserDto.setNickName(userInfo.getNickName());
+        sessionWebUserDto.setProvince(province);
+        sessionWebUserDto.setUserId(userInfo.getUserId());
+        // 判断是否管理员，管理员邮箱在系统设置中配置，多个用逗号分隔
+        sessionWebUserDto.setAdmin(!StringUtils.isBlank(webConfig.getAdminEmails()) && ArrayUtils.contains(webConfig.getAdminEmails().split(","), userInfo.getEmail()));
+        return sessionWebUserDto;
+    }
+
+    // 根据 IP 地址获取所在地信息
+    public Map<String, String> getIpAddress(String ip) {
+        Map<String, String> addressInfo = new HashMap<>();
+        try {
+            String url = webConfig.getIpAddressUrl() + ip;
+            String responseJson = OKHttpUtils.getRequest(url);
+            if (responseJson == null || StringUtils.isBlank(responseJson)) {
+                return addressInfo;
+            }
+            addressInfo = JsonUtils.json2Object(responseJson, Map.class);
+            return addressInfo;
+        } catch (Exception e) {
+            logger.error("获取ip所在地失败");
+        }
+        return addressInfo;
+    }
+
+    /**
+     * 重置密码接口
+     *
+     * @param email     邮箱
+     * @param password  新密码
+     * @param emailCode 邮箱验证码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPwd(String email, String password, String emailCode) {
+        UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
+        if (null == userInfo) {
+            throw new BusinessException("邮箱账号不存在");
+        }
+        //校验邮箱验证码
+        emailCodeService.checkCode(email, emailCode);
+
+        UserInfo updateInfo = new UserInfo();
+        updateInfo.setPassword(SecureUtil.md5(password));
+        this.userInfoMapper.updateByEmail(updateInfo, email);
     }
 }

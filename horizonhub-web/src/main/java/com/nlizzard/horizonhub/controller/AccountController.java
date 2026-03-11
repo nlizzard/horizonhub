@@ -1,21 +1,30 @@
 package com.nlizzard.horizonhub.controller;
 
 
+import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
+import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.basecontroller.BaseController;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.dto.CreateImageCode;
+import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
+import com.nlizzard.horizonhub.entity.dto.SysSetting4CommentDto;
+import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
+import com.nlizzard.horizonhub.entity.enums.VerifyRegexEnum;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.service.UserInfoService;
+import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 账号相关controller
@@ -37,7 +46,7 @@ public class AccountController extends BaseController {
      * @param type     0：登录注册图片验证码，1：发送邮件图片验证码
      * @throws IOException
      */
-    @GetMapping(value = "/checkCode")
+    @RequestMapping(value = "/checkCode")
     public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws
             IOException {
         // 创建图片验证码对象
@@ -67,11 +76,12 @@ public class AccountController extends BaseController {
      * @param type      0-注册验证码，1-找回密码验证码
      * @return
      */
-    @GetMapping("/sendEmailCode")
+    @RequestMapping("/sendEmailCode")
+    @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> sendEmailCode(HttpSession session,
-                                          String email,
-                                          String checkCode,
-                                          Integer type) {
+                                          @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
+                                          @VerifyParam(required = true) String checkCode,
+                                          @VerifyParam(required = true) Integer type) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
                 throw new BusinessException("图片验证码不正确");
@@ -94,13 +104,14 @@ public class AccountController extends BaseController {
      * @param emailCode
      * @return
      */
-    @PostMapping("/register")
+    @RequestMapping("/register")
+    @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> register(HttpSession session,
-                                     String email,
-                                     String nickName,
-                                     String password,
-                                     String checkCode,
-                                     String emailCode) {
+                                     @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
+                                     @VerifyParam(required = true, max = 20) String nickName,
+                                     @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD) String password,
+                                     @VerifyParam(required = true) String checkCode,
+                                     @VerifyParam(required = true) String emailCode) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 throw new BusinessException("图片验证码不正确");
@@ -108,6 +119,100 @@ public class AccountController extends BaseController {
             userInfoService.register(email, nickName, password, emailCode);
             return getSuccessResponseVO(null);
         } finally {
+            session.removeAttribute(Constants.CHECK_CODE_KEY);
+        }
+    }
+
+    /**
+     * 登录接口
+     */
+    @RequestMapping("/login")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO<SessionWebUserDto> login(HttpSession session, HttpServletRequest request,
+                                               @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
+                                               @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD) String password,
+                                               @VerifyParam(required = true) String checkCode) {
+        try {
+            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
+                throw new BusinessException("图片验证码不正确");
+            }
+            // 登录
+            SessionWebUserDto sessionWebUserDto = userInfoService.login(email, password, getIpAddr(request));
+            // 登录成功后将用户信息存入 session
+            session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
+            return getSuccessResponseVO(sessionWebUserDto);
+        } finally {
+            session.removeAttribute(Constants.CHECK_CODE_KEY);
+        }
+    }
+
+    /**
+     * 获取当前登录用户信息接口
+     *
+     * @param session
+     * @return
+     */
+    @RequestMapping("/getUserInfo")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO<SessionWebUserDto> getUserInfo(HttpSession session) {
+        return getSuccessResponseVO(getUserInfoFromSession(session));
+
+    }
+
+
+    /**
+     * 退出登录接口
+     *
+     * @param session
+     * @return
+     */
+    @RequestMapping("/logout")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO<Void> logout(HttpSession session) {
+        session.removeAttribute(Constants.SESSION_KEY);
+        return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 获取系统设置接口
+     *
+     * @return
+     */
+    @RequestMapping("/getSysSetting")
+    public ResponseVO<Map<String, Object>> getSysSetting() {
+        SysSettingDto sysSettingDto = SysCacheUtils.getSysSetting();
+        Map<String, Object> sysSettingMap = new HashMap<>();
+        // 评论设置
+        SysSetting4CommentDto commentSetting = sysSettingDto.getCommentSetting();
+        sysSettingMap.put("commentOpen", commentSetting.getCommentOpen());
+        return getSuccessResponseVO(sysSettingMap);
+    }
+
+    /**
+     * 重置密码接口
+     *
+     * @param session
+     * @param email
+     * @param password
+     * @param checkCode
+     * @param emailCode
+     * @return
+     */
+    @RequestMapping("/resetPwd")
+    @GlobalInterceptor(checkParams = true, checkLogin = true)
+    public ResponseVO<Void> resetPwd(HttpSession session,
+                                     @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
+                                     @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
+                                     @VerifyParam(required = true) String checkCode,
+                                     @VerifyParam(required = true) String emailCode) {
+        try {
+            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
+                throw new BusinessException("图片验证码不正确");
+            }
+            userInfoService.resetPwd(email, password, emailCode);
+            return getSuccessResponseVO(null);
+        } finally {
+            // 重置密码成功后，清除登录注册的图片验证码，避免重复使用
             session.removeAttribute(Constants.CHECK_CODE_KEY);
         }
     }

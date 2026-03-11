@@ -16,4 +16,8 @@ public class Constants {
     public static final Integer USER_ID_LENGTH = 19;
     // 内存中系统设置的key，用concurrentHashMap存储
     public static final String SYS_SETTING_KEY = "sys_setting";
+    // session中用户信息的key
+    public static final String SESSION_KEY = "session_key";
+    // ip省份默认未知
+    public static final String IP_PROVINCE_DEFAULT = "未知";
 }

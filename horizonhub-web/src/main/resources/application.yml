@@ -1,20 +1,35 @@
+# 应用相关配置
 server:
   port: 8080
   servlet:
     context-path: /api
 spring:
+  # 数据库相关配置
   datasource:
-    url: jdbc:mysql://localhost:3306/horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/db_horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
-    password: 123456
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
+  # 发送邮件相关配置
   mail:
     username: xxxx@qq.com
     host: smtp.qq.com
     port: 465
     password: xxxx
     default-encoding: UTF-8
+# 是否使用邮箱验证码，false，验证码打印在控制台，true，发送邮件
 send:
   mail:
     open: false
+# ip地址查询接口（用于获取具体省份）
+ip:
+  address:
+    province:
+      query:
+        url: https://whois.pconline.com.cn/ipJson.jsp?json=true&ip=
+# 管理员邮箱地址（多个使用，分隔）
+admin:
+  emails: xxx@qq.com
+# 是否处于开发模式，true，开发模式，false，生产模式
+isDev: false

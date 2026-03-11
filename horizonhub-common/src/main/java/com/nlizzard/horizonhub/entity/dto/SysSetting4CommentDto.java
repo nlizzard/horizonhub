@@ -11,7 +11,9 @@ public class SysSetting4CommentDto {
      */
     private Integer commentDayCountThreshold;
 
-
+    /**
+     * 是否开启评论
+     */
     private Boolean commentOpen;
 
     public Boolean getCommentOpen() {

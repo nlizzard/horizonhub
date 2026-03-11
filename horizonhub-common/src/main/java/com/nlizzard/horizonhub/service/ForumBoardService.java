@@ -58,4 +58,10 @@ public interface ForumBoardService {
      */
     Integer deleteForumBoardByBoardId(Integer boardId);
 
+    /**
+     * 获取板块树
+     *
+     * @param postType 文章类型，1表示查询所有
+     */
+    List<ForumBoard> getBoardTree(Integer postType);
 }

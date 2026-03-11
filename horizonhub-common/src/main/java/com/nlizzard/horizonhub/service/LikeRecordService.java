@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service;
 
+import com.nlizzard.horizonhub.entity.enums.OperRecordOpTypeEnum;
 import com.nlizzard.horizonhub.entity.pojo.LikeRecord;
 import com.nlizzard.horizonhub.entity.query.LikeRecordQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
@@ -73,4 +74,18 @@ public interface LikeRecordService {
      */
     Integer deleteLikeRecordByObjectIdAndUserIdAndOpType(String objectId, String userId, Integer opType);
 
+    /**
+     * 根据ObjectIdAndUserIdAndOpType查询对象
+     */
+    LikeRecord getUserOperRecordByObjectIdAndUserIdAndOpType(String objectId, String userId, Integer opType);
+
+    /**
+     * 点赞/取消点赞
+     *
+     * @param articleId            文章ID
+     * @param userId               当前用户ID
+     * @param nickName             当前用户昵称
+     * @param operRecordOpTypeEnum 记录表操作枚举
+     */
+    void doLike(String articleId, String userId, String nickName, OperRecordOpTypeEnum operRecordOpTypeEnum);
 }

@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service;
 
+import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.UserIntegralOperTypeEnum;
 import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
@@ -108,4 +109,23 @@ public interface UserInfoService {
      * @param integral     变更的积分数值
      */
     void updateUserIntegral(String userId, UserIntegralOperTypeEnum operTypeEnum, Integer changeType, Integer integral);
+
+    /**
+     * 登录接口
+     *
+     * @param email     邮箱
+     * @param password  密码
+     * @param ipAddress 登录 IP 地址
+     * @return
+     */
+    SessionWebUserDto login(String email, String password, String ipAddress);
+
+    /**
+     * 重置密码接口
+     *
+     * @param email
+     * @param password
+     * @param emailCode
+     */
+    void resetPwd(String email, String password, String emailCode);
 }
