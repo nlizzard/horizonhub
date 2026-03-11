@@ -58,6 +58,12 @@ public interface EmailCodeService {
      */
     void deleteEmailCodeByEmailAndCode(String email, String code);
 
+    /**
+     * 发送邮箱验证码
+     *
+     * @param toEmail 接收验证码的邮箱地址
+     * @param type    验证码类型（0：注册验证码，1：找回密码验证码），根据业务需求定义不同的类型
+     */
     void sendEmailCode(String toEmail, Integer type);
 
     void checkCode(String email, String code);

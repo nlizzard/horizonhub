@@ -61,7 +61,7 @@ public interface ForumBoardService {
     /**
      * 获取板块树
      *
-     * @param postType 文章类型，1表示查询所有
+     * @param postType 文章类型，0:管理员可发帖 1:所有人可发帖，null:所有板块
      */
     List<ForumBoard> getBoardTree(Integer postType);
 }

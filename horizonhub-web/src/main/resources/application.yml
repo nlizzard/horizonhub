@@ -6,9 +6,9 @@ server:
 spring:
   # 数据库相关配置
   datasource:
-    url: jdbc:mysql://localhost:3306/db_horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
-    password:
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   # 发送邮件相关配置
@@ -33,3 +33,5 @@ admin:
   emails: xxx@qq.com
 # 是否处于开发模式，true，开发模式，false，生产模式
 isDev: false
+# 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
+projectFolder: E:/project/horizonhub

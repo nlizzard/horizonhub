@@ -3,14 +3,14 @@ package com.nlizzard.horizonhub.controller;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.basecontroller.BaseController;
+import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.ArticleOrderTypeEnum;
 import com.nlizzard.horizonhub.entity.enums.ArticleStatusEnum;
 import com.nlizzard.horizonhub.entity.enums.OperRecordOpTypeEnum;
 import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
-import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
-import com.nlizzard.horizonhub.entity.pojo.ForumArticleAttachment;
-import com.nlizzard.horizonhub.entity.pojo.LikeRecord;
+import com.nlizzard.horizonhub.entity.pojo.*;
 import com.nlizzard.horizonhub.entity.query.ForumArticleAttachmentQuery;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
@@ -19,20 +19,29 @@ import com.nlizzard.horizonhub.entity.vo.web.FormArticleDetailVO;
 import com.nlizzard.horizonhub.entity.vo.web.ForumArticleAttachmentVo;
 import com.nlizzard.horizonhub.entity.vo.web.ForumArticleVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
-import com.nlizzard.horizonhub.service.ForumArticleAttachmentService;
-import com.nlizzard.horizonhub.service.ForumArticleService;
-import com.nlizzard.horizonhub.service.LikeRecordService;
+import com.nlizzard.horizonhub.service.*;
 import com.nlizzard.horizonhub.utils.CopyTools;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.*;
+import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/forum")
 public class ForumArticleController extends BaseController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ForumArticleController.class);
 
     @Resource
     private ForumArticleService forumArticleService;
@@ -43,12 +52,20 @@ public class ForumArticleController extends BaseController {
     @Resource
     private LikeRecordService likeRecordService;
 
+    @Resource
+    private UserInfoService userInfoService;
+
+    @Resource
+    private ForumArticleAttachmentDownloadService forumArticleAttachmentDownloadService;
+    @Autowired
+    private WebConfig webConfig;
+
     /**
      * 加载文章列表（首页）
      *
      * @param session   session
-     * @param boardId   文章板块ID
-     * @param pBoardId  文章父级板块ID
+     * @param boardId   文章板块 ID
+     * @param pBoardId  文章父级板块 ID
      * @param orderType 排序类型 0:默认排序 1:最新发布 2:最热
      * @param pageNo    页码
      * @return
@@ -134,5 +151,87 @@ public class ForumArticleController extends BaseController {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
         likeRecordService.doLike(articleId, userDto.getUserId(), userDto.getNickName(), OperRecordOpTypeEnum.ARTICLE_LIKE);
         return getSuccessResponseVO(null);
+    }
+
+    /**
+     * 获取用户下载信息（积分和是否已下载过文件）
+     *
+     * @param session
+     * @param fileId  附件文件 ID
+     * @return
+     */
+    @RequestMapping("/getUserDownloadInfo")
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    public ResponseVO<Map<String, Object>> getUserDownloadInfo(HttpSession session,
+                                                               @VerifyParam(required = true) String fileId) {
+        Map<String, Object> result = new HashMap<>();
+        // 取用户当前积分
+        UserInfo userInfo = userInfoService.getUserInfoByUserId(getUserInfoFromSession(session).getUserId());
+        result.put("userIntegral", userInfo.getCurrentIntegral());
+        // 查询用户是否已下载过该附件
+        ForumArticleAttachmentDownload attachmentDownload = forumArticleAttachmentDownloadService.getForumArticleAttachmentDownloadByFileIdAndUserId(fileId,
+                getUserInfoFromSession(session).getUserId());
+        result.put("haveDownload", attachmentDownload != null);
+        return getSuccessResponseVO(result);
+    }
+
+    /**
+     * 附件下载
+     *
+     * @param session
+     * @param request
+     * @param response
+     * @param fileId   附件文件 ID
+     */
+    @RequestMapping("/attachmentDownload")
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    public void attachmentDownload(HttpSession session, HttpServletRequest request, HttpServletResponse response,
+                                   @VerifyParam(required = true) String fileId) {
+        // 扣除积分，记录下载记录和消息，并获取附件信息
+        ForumArticleAttachment attachment = forumArticleAttachmentService.downloadAttachment(fileId, getUserInfoFromSession(session));
+        InputStream in = null;
+        OutputStream out = null;
+        String downloadFileName = attachment.getFileName();
+        // 拼接附件文件存放路径
+        String filePath = webConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_ATTACHMENT + attachment.getFilePath();
+        File file = new File(filePath);
+        try {
+            in = new FileInputStream(file);
+            out = response.getOutputStream();
+            response.setContentType("application/x-msdownload; charset=UTF-8");
+            // 解决中文文件名乱码问题
+            if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {//IE浏览器
+                downloadFileName = URLEncoder.encode(downloadFileName, "UTF-8");
+            } else {
+                downloadFileName = new String(downloadFileName.getBytes("UTF-8"), "ISO8859-1");
+            }
+            response.setHeader("Content-Disposition", "attachment;filename=\"" + downloadFileName + "\"");
+            byte[] byteData = new byte[1024];
+            int len = 0;
+            while ((len = in.read(byteData)) != -1) {
+                out.write(byteData, 0, len); // write
+            }
+            out.flush();
+        } catch (Exception e) {
+            logger.error("下载异常", e);
+            throw new BusinessException("下载失败");
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+
+            } catch (IOException e) {
+                logger.error("IO异常", e);
+            }
+            try {
+                if (out != null) {
+                    out.close();
+                }
+
+            } catch (IOException e) {
+                logger.error("IO异常", e);
+            }
+        }
     }
 }

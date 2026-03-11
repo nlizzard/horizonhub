@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service;
 
+import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticleAttachment;
 import com.nlizzard.horizonhub.entity.query.ForumArticleAttachmentQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
@@ -58,4 +59,12 @@ public interface ForumArticleAttachmentService {
      */
     void deleteForumArticleAttachmentByFileId(String fileId);
 
+    /**
+     * 判断附件是否存在，判断附件/用户是否下载过/积分是否够/是否是用户发布的附件，如果可以下载，记录下载记录，更新附件下载次数，并返回附件信息
+     *
+     * @param fileId            附件文件 ID
+     * @param sessionWebUserDto 当前登录用户信息（session中）
+     * @return ForumArticleAttachment 附件信息
+     */
+    ForumArticleAttachment downloadAttachment(String fileId, SessionWebUserDto sessionWebUserDto);
 }

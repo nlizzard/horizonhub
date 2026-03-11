@@ -114,7 +114,7 @@ public interface UserInfoService {
      * 登录接口
      *
      * @param email     邮箱
-     * @param password  密码
+     * @param password  密码(MD5加密后的密码)
      * @param ipAddress 登录 IP 地址
      * @return
      */
@@ -123,9 +123,9 @@ public interface UserInfoService {
     /**
      * 重置密码接口
      *
-     * @param email
-     * @param password
-     * @param emailCode
+     * @param email     邮箱
+     * @param password  新密码(原始密码)
+     * @param emailCode 邮箱验证码
      */
     void resetPwd(String email, String password, String emailCode);
 }

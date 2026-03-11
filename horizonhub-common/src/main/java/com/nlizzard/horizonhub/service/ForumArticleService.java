@@ -60,6 +60,8 @@ public interface ForumArticleService {
 
     /**
      * 文章详情获取
+     *
+     * @param articleId 文章 ID
      */
     ForumArticle readArticle(String articleId);
 }

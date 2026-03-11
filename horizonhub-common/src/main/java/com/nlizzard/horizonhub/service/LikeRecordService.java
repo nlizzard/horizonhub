@@ -76,6 +76,10 @@ public interface LikeRecordService {
 
     /**
      * 根据ObjectIdAndUserIdAndOpType查询对象
+     *
+     * @param objectId 文章ID
+     * @param userId   当前用户ID
+     * @param opType   操作类型 0:点赞 1:取消点赞
      */
     LikeRecord getUserOperRecordByObjectIdAndUserIdAndOpType(String objectId, String userId, Integer opType);
 

@@ -71,8 +71,8 @@ public class AccountController extends BaseController {
      * 发送邮箱验证码
      *
      * @param session
-     * @param email
-     * @param checkCode
+     * @param email     接收验证码的邮箱地址
+     * @param checkCode 图片验证码
      * @param type      0-注册验证码，1-找回密码验证码
      * @return
      */
@@ -97,11 +97,11 @@ public class AccountController extends BaseController {
      * 注册账号接口
      *
      * @param session
-     * @param email
-     * @param nickName
-     * @param password
-     * @param checkCode
-     * @param emailCode
+     * @param email     邮箱
+     * @param nickName  昵称
+     * @param password  密码
+     * @param checkCode 图片验证码
+     * @param emailCode 邮箱验证码
      * @return
      */
     @RequestMapping("/register")
@@ -125,6 +125,13 @@ public class AccountController extends BaseController {
 
     /**
      * 登录接口
+     *
+     * @param session
+     * @param request
+     * @param email     邮箱
+     * @param password  密码(md5加密后的密码)
+     * @param checkCode 图片验证码
+     * @return
      */
     @RequestMapping("/login")
     @GlobalInterceptor(checkParams = true)
@@ -192,10 +199,10 @@ public class AccountController extends BaseController {
      * 重置密码接口
      *
      * @param session
-     * @param email
-     * @param password
-     * @param checkCode
-     * @param emailCode
+     * @param email     邮箱
+     * @param password  新密码（原始密码）
+     * @param checkCode 图片验证码
+     * @param emailCode 邮箱验证码
      * @return
      */
     @RequestMapping("/resetPwd")

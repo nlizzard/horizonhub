@@ -20,4 +20,8 @@ public class Constants {
     public static final String SESSION_KEY = "session_key";
     // ip省份默认未知
     public static final String IP_PROVINCE_DEFAULT = "未知";
+    // 论坛文件存放位置的文件夹路径前缀
+    public static final String FILE_FOLDER_FILE = "/file/";
+    // 论坛文章附件存放位置的文件夹路径前缀
+    public static final String FILE_FOLDER_ATTACHMENT = "attachment/";
 }
