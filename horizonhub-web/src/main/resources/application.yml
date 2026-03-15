@@ -3,6 +3,9 @@ server:
   port: 8080
   servlet:
     context-path: /api
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 spring:
   # 数据库相关配置
   datasource:

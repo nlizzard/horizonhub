@@ -32,6 +32,8 @@
         <result column="good_count" property="goodCount"/>
         <!--0:待审核  1:已审核-->
         <result column="status" property="status"/>
+        <!--数据库外额外：查询是否点赞用到的字段-->
+        <result column="likeType" property="likeType"/>
     </resultMap>
 
     <!--通用结果列-->
@@ -81,7 +83,7 @@
         <if test="query.goodCount != null">
             and good_count = #{query.goodCount}
         </if>
-        <if test="query.status != null">
+        <if test="query.status != null and query.currentUserId == null">
             and status = #{query.status}
         </if>
     </sql>
@@ -118,6 +120,17 @@
         <if test="query.postTimeEnd != null and query.postTimeEnd !=''">
             <![CDATA[ and post_time < date_sub(str_to_date(#{query.postTimeEnd}, '%Y-%m-%d'),interval -1 day) ]]>
         </if>
+        <!--只查询二级查询级评论-->
+        <if test="query.parentCommentIdList != null and query.parentCommentIdList.size() > 0">
+            and p_comment_id in
+            <foreach collection="query.parentCommentIdList" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <!--用户登录的情况下，不仅差审核通过的，还要查当前用户发送的但未审核的-->
+        <if test="query.currentUserId != null">
+            and (status = 1 or(status = 0 and #{query.currentUserId} = user_id) )
+        </if>
     </sql>
 
     <!--通用查询条件-->
@@ -132,7 +145,11 @@
     <select id="selectList" resultMap="base_result_map">
         SELECT
         <include refid="base_column_list"/>
-        FROM forum_comment
+        <if test="query.queryIsLike !=null and query.queryIsLike and query.currentUserId != null">
+            ,(select count(1) from like_record r where r.object_id = c.comment_id and r.user_id =
+            #{query.currentUserId}) likeType
+        </if>
+        FROM forum_comment c
         <include refid="query_condition"/>
         <if test="query.orderBy!=null">order by ${query.orderBy}</if>
         <if test="query.simplePage!=null">limit #{query.simplePage.start},#{query.simplePage.end}</if>

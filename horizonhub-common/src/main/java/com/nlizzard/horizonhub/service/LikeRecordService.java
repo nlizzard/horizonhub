@@ -77,8 +77,8 @@ public interface LikeRecordService {
     /**
      * 根据ObjectIdAndUserIdAndOpType查询对象
      *
-     * @param objectId 文章ID
-     * @param userId   当前用户ID
+     * @param objectId 主体 ID （文章/评论 ID）
+     * @param userId   当前用户 ID
      * @param opType   操作类型 0:点赞 1:取消点赞
      */
     LikeRecord getUserOperRecordByObjectIdAndUserIdAndOpType(String objectId, String userId, Integer opType);
@@ -86,10 +86,10 @@ public interface LikeRecordService {
     /**
      * 点赞/取消点赞
      *
-     * @param articleId            文章ID
-     * @param userId               当前用户ID
+     * @param objectId             被点赞/取消点赞的主体 ID （文章/评论）
+     * @param userId               当前用户 ID
      * @param nickName             当前用户昵称
-     * @param operRecordOpTypeEnum 记录表操作枚举
+     * @param operRecordOpTypeEnum 记录表操作枚举(文章点赞/评论点赞)
      */
-    void doLike(String articleId, String userId, String nickName, OperRecordOpTypeEnum operRecordOpTypeEnum);
+    void doLike(String objectId, String userId, String nickName, OperRecordOpTypeEnum operRecordOpTypeEnum);
 }

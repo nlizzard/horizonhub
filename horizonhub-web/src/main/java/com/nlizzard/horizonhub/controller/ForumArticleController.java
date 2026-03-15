@@ -228,7 +228,6 @@ public class ForumArticleController extends BaseController {
                 if (out != null) {
                     out.close();
                 }
-
             } catch (IOException e) {
                 logger.error("IO异常", e);
             }

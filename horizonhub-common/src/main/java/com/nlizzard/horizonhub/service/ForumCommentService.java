@@ -58,4 +58,12 @@ public interface ForumCommentService {
      */
     Integer deleteForumCommentByCommentId(Integer commentId);
 
+    /**
+     * 置顶/取消置顶评论
+     *
+     * @param userId    操作人用户 ID
+     * @param commentId 评论 ID
+     * @param topType   置顶类型（0-未置顶，1-置顶）
+     */
+    void changeTopType(String userId, Integer commentId, Integer topType);
 }

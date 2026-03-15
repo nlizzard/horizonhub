@@ -8,6 +8,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @Description:评论
@@ -87,6 +88,40 @@ public class ForumComment implements Serializable {
      */
     @JsonIgnore
     private Integer status;
+
+    /**
+     * 子评论
+     */
+    private List<ForumComment> children;
+
+    /**
+     * 当前用户是否点赞了该评论 0:未点赞 1:已点赞
+     */
+    private Integer likeType;
+
+    public Integer getLikeType() {
+        return likeType;
+    }
+
+    public void setLikeType(Integer likeType) {
+        this.likeType = likeType;
+    }
+
+    public Integer getHasLike() {
+        return likeType;
+    }
+
+    public void setHasLike(Integer likeType) {
+        this.likeType = likeType;
+    }
+
+    public List<ForumComment> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<ForumComment> children) {
+        this.children = children;
+    }
 
     public void setCommentId(Integer commentId) {
         this.commentId = commentId;

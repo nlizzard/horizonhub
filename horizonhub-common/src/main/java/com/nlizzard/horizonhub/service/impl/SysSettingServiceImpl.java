@@ -128,7 +128,7 @@ public class SysSettingServiceImpl implements SysSettingService {
             List<SysSetting> sysSettinglist = this.findListByParam(new SysSettingQuery());
             Class<SysSettingDto> clazz = SysSettingDto.class;
             for (SysSetting sysSetting : sysSettinglist) {
-                // 具体配置json内容
+                // 具体配置 json 内容
                 String jsonContent = sysSetting.getJsonContent();
                 if (StringUtils.isBlank(jsonContent)) {
                     continue;

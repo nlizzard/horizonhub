@@ -166,12 +166,12 @@ public class LikeRecordServiceImpl implements LikeRecordService {
     public void doLike(String objectId, String userId, String nickName, OperRecordOpTypeEnum opTypeEnum) {
         UserMessage userMessage = new UserMessage();
         userMessage.setCreateTime(new Date());
-        ForumArticle forumArticle = forumArticleMapper.selectByArticleId(objectId);
-        if (null == forumArticle) {
-            throw new BusinessException("文章不存在");
-        }
         switch (opTypeEnum) {
             case ARTICLE_LIKE: // 文章点赞
+                ForumArticle forumArticle = forumArticleMapper.selectByArticleId(objectId);
+                if (null == forumArticle) {
+                    throw new BusinessException("文章不存在");
+                }
                 articleLike(forumArticle, objectId, userId, opTypeEnum);
                 userMessage.setArticleId(objectId);
                 userMessage.setArticleTitle(forumArticle.getTitle());
@@ -190,11 +190,17 @@ public class LikeRecordServiceImpl implements LikeRecordService {
                 }
                 break;
             case COMMENT_LIKE: // 评论点赞
-                commentLike(objectId, userId, opTypeEnum);
                 ForumComment forumComment = forumCommentMapper.selectByCommentId(Integer.parseInt(objectId));
-                ForumArticle commentArticle = forumArticleMapper.selectByArticleId(forumComment.getArticleId());
-                userMessage.setArticleId(commentArticle.getArticleId());
-                userMessage.setArticleTitle(commentArticle.getTitle());
+                if (null == forumComment) {
+                    throw new BusinessException(ResponseCodeEnum.CODE_404.getCode(), "评论不存在");
+                }
+                commentLike(forumComment, objectId, userId, opTypeEnum);
+                ForumArticle article = forumArticleMapper.selectByArticleId(forumComment.getArticleId());
+                if (null == article) {
+                    throw new BusinessException(ResponseCodeEnum.CODE_404.getCode(), "文章不存在");
+                }
+                userMessage.setArticleId(article.getArticleId());
+                userMessage.setArticleTitle(article.getTitle());
                 userMessage.setMessageType(MessageTypeEnum.COMMENT_LIKE.getType());
                 userMessage.setCommentId(Integer.parseInt(objectId));
                 userMessage.setReceivedUserId(forumComment.getUserId());
@@ -204,7 +210,7 @@ public class LikeRecordServiceImpl implements LikeRecordService {
                 userMessage.setSendNickName(nickName);
                 userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
                 if (!userId.equals(userMessage.getReceivedUserId())) {
-                    UserMessage userMessage1 = userMessageMapper.selectByArticleIdAndSendUserIdAndMessageType(objectId, userId, MessageTypeEnum.COMMENT_LIKE.getType());
+                    UserMessage userMessage1 = userMessageMapper.selectByArticleIdAndCommentIdAndSendUserIdAndMessageType(article.getArticleId(), Integer.parseInt(objectId), userId, MessageTypeEnum.COMMENT_LIKE.getType());
                     if (userMessage1 == null) {
                         userMessageMapper.insert(userMessage);
                     }
@@ -217,52 +223,52 @@ public class LikeRecordServiceImpl implements LikeRecordService {
     /**
      * 文章点赞，取消点赞
      *
-     * @param objectId   文章ID
-     * @param userId     当前用户ID
-     * @param opTypeEnum 记录表操作类型枚举（0:文章点赞，1:评论点赞）
+     * @param forumArticle 文章对象
+     * @param articleId    文章ID
+     * @param userId       当前用户ID
+     * @param opTypeEnum   记录表操作类型枚举（0:文章点赞，1:评论点赞）
      */
-    public void articleLike(ForumArticle forumArticle, String objectId, String userId, OperRecordOpTypeEnum opTypeEnum) {
-        LikeRecord record = this.likeRecordMapper.selectByObjectIdAndUserIdAndOpType(objectId, userId, opTypeEnum.getType());
+    public void articleLike(ForumArticle forumArticle, String articleId, String userId, OperRecordOpTypeEnum opTypeEnum) {
+        int changCount;
+        LikeRecord record = this.likeRecordMapper.selectByObjectIdAndUserIdAndOpType(articleId, userId, opTypeEnum.getType());
         if (record != null) { // 点赞记录不为空，取消点赞并且更新文章点赞数
-            this.likeRecordMapper.deleteByObjectIdAndUserIdAndOpType(objectId, userId, opTypeEnum.getType());
-            forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.GOOD_COUNT.getType(), -1, objectId);
+            this.likeRecordMapper.deleteByObjectIdAndUserIdAndOpType(articleId, userId, opTypeEnum.getType());
+            changCount = -1;
         } else {
             LikeRecord operRecord = new LikeRecord();
-            operRecord.setObjectId(objectId);
+            operRecord.setObjectId(articleId);
             operRecord.setUserId(userId);
             operRecord.setOpType(opTypeEnum.getType());
             operRecord.setCreateTime(new Date());
             operRecord.setAuthorUserId(forumArticle.getUserId());
             this.likeRecordMapper.insert(operRecord);
-            forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.GOOD_COUNT.getType(), 1, objectId);
+            changCount = 1;
         }
+        forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.GOOD_COUNT.getType(), changCount, articleId);
     }
 
     /**
-     * 评论 点赞 踩
+     * 评论 点赞 取消点赞
      *
-     * @param objectId   评论ID
-     * @param userId     当前用户ID
-     * @param opTypeEnum 记录表操作类型枚举（0:文章点赞，1:评论点赞）
+     * @param forumComment 评论对象
+     * @param commentId    评论ID
+     * @param userId       当前用户 ID
+     * @param opTypeEnum   记录表操作类型枚举（0:文章点赞，1:评论点赞）
      */
-    public void commentLike(String objectId, String userId, OperRecordOpTypeEnum opTypeEnum) {
-        LikeRecord record = this.likeRecordMapper.selectByObjectIdAndUserIdAndOpType(objectId, userId, opTypeEnum.getType());
+    public void commentLike(ForumComment forumComment, String commentId, String userId, OperRecordOpTypeEnum opTypeEnum) {
+        LikeRecord record = this.likeRecordMapper.selectByObjectIdAndUserIdAndOpType(commentId, userId, opTypeEnum.getType());
         if (record != null) { // 评论点赞记录不为空，取消点赞并且减少评论点赞数
-            this.likeRecordMapper.deleteByObjectIdAndUserIdAndOpType(objectId, userId, opTypeEnum.getType());
-            forumCommentMapper.updateCommentCount(-1, Integer.parseInt(objectId));
+            this.likeRecordMapper.deleteByObjectIdAndUserIdAndOpType(commentId, userId, opTypeEnum.getType());
+            forumCommentMapper.updateCommentCount(-1, Integer.parseInt(commentId));
         } else {
-            ForumComment forumComment = forumCommentMapper.selectByCommentId(Integer.parseInt(objectId));
-            if (null == forumComment) {
-                throw new BusinessException("评论不存在");
-            }
             LikeRecord likeRecord = new LikeRecord();
-            likeRecord.setObjectId(objectId);
+            likeRecord.setObjectId(commentId);
             likeRecord.setUserId(userId);
             likeRecord.setOpType(opTypeEnum.getType());
             likeRecord.setCreateTime(new Date());
             likeRecord.setAuthorUserId(forumComment.getUserId());
             this.likeRecordMapper.insert(likeRecord);
-            forumCommentMapper.updateCommentCount(1, Integer.parseInt(objectId));
+            forumCommentMapper.updateCommentCount(1, Integer.parseInt(commentId));
         }
     }
 }

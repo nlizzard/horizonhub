@@ -113,7 +113,13 @@ public class OperationAspect {
      */
     private void checkLogin() {
         // 拿到当前请求的session，获取用户信息，如果没有用户信息，则抛出异常
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        // 1. 获取 RequestAttributes
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        // 2. 检查 attributes 是否为空（防止在非 Web 线程调用）
+        if (attributes == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404.getCode(), "系统异常：非 Web 请求环境");
+        }
+        HttpServletRequest request = attributes.getRequest();
         HttpSession session = request.getSession();
         SessionWebUserDto sessionUser = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
         // TODO

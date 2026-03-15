@@ -5,7 +5,6 @@ import com.nlizzard.horizonhub.entity.pojo.ForumBoard;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.service.ForumBoardService;
 import jakarta.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +22,7 @@ public class ForumBoardController extends BaseController {
      *
      * @return
      */
-    @GetMapping("/loadBoard")
+    @RequestMapping("/loadBoard")
     public ResponseVO<List<ForumBoard>> loadBoard() {
         return getSuccessResponseVO(forumBoardService.getBoardTree(null));
     }

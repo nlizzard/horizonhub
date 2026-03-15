@@ -47,8 +47,9 @@ public class AccountController extends BaseController {
      * @throws IOException
      */
     @RequestMapping(value = "/checkCode")
-    public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws
-            IOException {
+    public void checkCode(HttpServletResponse response,
+                          HttpSession session,
+                          Integer type) throws IOException {
         // 创建图片验证码对象
         CreateImageCode codeEntity = new CreateImageCode(130, 38, 5, 10);
         response.setHeader("Pragma", "no-cache");

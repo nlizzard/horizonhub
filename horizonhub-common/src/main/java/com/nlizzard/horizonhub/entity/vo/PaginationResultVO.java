@@ -18,6 +18,15 @@ public class PaginationResultVO<T> {
         this.list = list;
     }
 
+    /**
+     * 分页显示 VO 构造函数
+     *
+     * @param totalCount 数据总条数
+     * @param pageSize   每页显示的条数
+     * @param pageNo     当前页码
+     * @param pageTotal  总页数
+     * @param list       分页数据列表
+     */
     public PaginationResultVO(Integer totalCount, Integer pageSize, Integer pageNo, Integer pageTotal, List<T> list) {
         if (pageNo == 0) {
             pageNo = 1; // 如果当前页码为0，则设置为1
