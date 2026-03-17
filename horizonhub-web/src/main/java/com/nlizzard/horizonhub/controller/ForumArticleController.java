@@ -193,7 +193,7 @@ public class ForumArticleController extends BaseController {
         OutputStream out = null;
         String downloadFileName = attachment.getFileName();
         // 拼接附件文件存放路径
-        String filePath = webConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_ATTACHMENT + attachment.getFilePath();
+        String filePath = webConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + File.separator + Constants.FILE_FOLDER_ATTACHMENT + File.separator + attachment.getFilePath();
         File file = new File(filePath);
         try {
             in = new FileInputStream(file);

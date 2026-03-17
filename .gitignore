@@ -1,3 +1,7 @@
+#custom
+file/**/*
+!file/**/.gitkeep
+
 # Maven / Java build output
 **/target/
 **/target/**
@@ -31,6 +35,7 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 ~$*
+rebel.xml
 
 # Environment / local overrides
 .env

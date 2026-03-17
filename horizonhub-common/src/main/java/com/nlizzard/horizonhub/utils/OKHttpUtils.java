@@ -24,7 +24,7 @@ public class OKHttpUtils {
      */
     private static final int TIME_OUT_SECONDS = 5;
 
-    private static Logger logger = LoggerFactory.getLogger(OKHttpUtils.class);
+    private static final Logger logger = LoggerFactory.getLogger(OKHttpUtils.class);
 
     private static OkHttpClient.Builder getClientBuilder() {
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder().followRedirects(false).addInterceptor(new RedirectInterceptor()).retryOnConnectionFailure(false);

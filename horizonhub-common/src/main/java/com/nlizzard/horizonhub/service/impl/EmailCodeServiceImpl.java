@@ -147,10 +147,8 @@ public class EmailCodeServiceImpl implements EmailCodeService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
             //邮件发件人
             helper.setFrom(webConfig.getSendUserName());
-            //邮件收件人 1或多个
+            //邮件收件人
             helper.setTo(toEmail);
-
-            // TODO: 这里可以改成从数据库获取邮件模板，生成邮件内容
             SysSetting4EmailDto emailDto = SysCacheUtils.getSysSetting().getEmailSetting();
             //邮件主题
             helper.setSubject(emailDto.getEmailTitle());

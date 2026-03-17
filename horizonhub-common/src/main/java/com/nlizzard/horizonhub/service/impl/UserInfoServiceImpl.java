@@ -1,6 +1,5 @@
 package com.nlizzard.horizonhub.service.impl;
 
-import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.crypto.SecureUtil;
 import com.nlizzard.horizonhub.constants.Constants;
@@ -215,9 +214,8 @@ public class UserInfoServiceImpl implements UserInfoService {
         //校验邮箱验证码，如果不正确或者过期会抛出异常，成功则失效验证码
         emailCodeService.checkCode(email, emailCode);
 
-        // 雪花算法生成用户ID
-        Snowflake snowflake = IdUtil.getSnowflake(1, 1);
-        String userId = snowflake.nextIdStr();
+        // 雪花算法生成用户 ID
+        String userId = IdUtil.getSnowflakeNextIdStr();
         userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setNickName(nickName);

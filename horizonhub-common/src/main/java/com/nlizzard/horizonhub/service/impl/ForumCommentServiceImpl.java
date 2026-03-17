@@ -1,11 +1,12 @@
 package com.nlizzard.horizonhub.service.impl;
 
-import com.nlizzard.horizonhub.entity.enums.CommentStatusEnum;
-import com.nlizzard.horizonhub.entity.enums.CommentTopTypeEnum;
-import com.nlizzard.horizonhub.entity.enums.PageSize;
-import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
+import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.dto.FileUploadDto;
+import com.nlizzard.horizonhub.entity.enums.*;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
 import com.nlizzard.horizonhub.entity.pojo.ForumComment;
+import com.nlizzard.horizonhub.entity.pojo.UserInfo;
+import com.nlizzard.horizonhub.entity.pojo.UserMessage;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
@@ -14,10 +15,17 @@ import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
 import com.nlizzard.horizonhub.mappers.ForumCommentMapper;
 import com.nlizzard.horizonhub.service.ForumCommentService;
+import com.nlizzard.horizonhub.service.UserInfoService;
+import com.nlizzard.horizonhub.service.UserMessageService;
+import com.nlizzard.horizonhub.utils.FileUtils;
+import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +44,15 @@ public class ForumCommentServiceImpl implements ForumCommentService {
     @Resource
     private ForumArticleMapper<ForumArticle, ForumArticleQuery> forumArticleMapper;
 
+    @Resource
+    private UserInfoService userInfoService;
+
+    @Resource
+    private UserMessageService userMessageService;
+
+    @Resource
+    private FileUtils fileUtils;
+
     /**
      * 根据条件查询列表
      */
@@ -52,6 +69,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
             subQuery.setArticleId(query.getArticleId());
             subQuery.setLoadChildren(query.getLoadChildren());
             subQuery.setStatus(CommentStatusEnum.AUDIT.getStatus());
+            subQuery.setOrderBy(CommentSortTypeEnum.SECOND_LEVEL_COMMENT_SORT_TYPE.getSortSQLField());
             // 根据当前分页结果中的一级评论查询二级评论
             List<Integer> parentCommentIdList = list.stream().map(ForumComment::getCommentId).collect(Collectors.toList());
             subQuery.setParentCommentIdList(parentCommentIdList);
@@ -175,5 +193,94 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         ForumComment updateInfo = new ForumComment();
         updateInfo.setTopType(topType);
         forumCommentMapper.updateByCommentId(updateInfo, forumComment.getCommentId());
+    }
+
+    /**
+     * 发表评论
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void postComment(ForumComment comment, MultipartFile image) {
+        //判断文章是否存在
+        ForumArticle forumArticle = forumArticleMapper.selectByArticleId(comment.getArticleId());
+        if (forumArticle == null || !ArticleStatusEnum.AUDIT.getStatus().equals(forumArticle.getStatus())) {
+            throw new BusinessException("评论的文章不存在");
+        }
+        //判断父级评论是否存在
+        ForumComment pComment = null;
+        if (comment.getPCommentId() != 0) {
+            pComment = forumCommentMapper.selectByCommentId(comment.getPCommentId());
+            if (pComment == null) {
+                throw new BusinessException("回复的评论不存在");
+            }
+        }
+        //判断被回复的用户是否存在
+        if (!StringUtils.isBlank(comment.getReplyUserId())) {
+            UserInfo userInfo = userInfoService.getUserInfoByUserId(comment.getReplyUserId());
+            if (userInfo == null) {
+                throw new BusinessException("回复的用户不存在");
+            }
+            comment.setReplyNickName(userInfo.getNickName());
+        }
+        comment.setPostTime(new Date());
+        // 如果评论图片不为空，则上传图片并保存图片路径
+        if (image != null) {
+            FileUploadDto fileUploadDto = fileUtils.uploadFile2Local(image, FileUploadTypeEnum.COMMENT_IMAGE, Constants.FILE_FOLDER_IMAGE);
+            comment.setImgPath(fileUploadDto.getLocalPath());
+        }
+
+        // 是否开启评论审核
+        Boolean needAudit = SysCacheUtils.getSysSetting().getAuditSetting().getCommentAudit();
+
+        //设置状态
+        comment.setStatus(needAudit ? CommentStatusEnum.NO_AUDIT.getStatus() : CommentStatusEnum.AUDIT.getStatus());
+        this.forumCommentMapper.insert(comment);
+
+        // 如果需要审核，则不执行后续操作，等管理员审核通过后再执行后续操作
+        if (needAudit) {
+            return;
+        }
+        updateCommentInfo(comment, forumArticle, pComment);
+    }
+
+    /**
+     * 更新评论相关信息（文章评论数、用户积分、消息记录等）
+     *
+     * @param comment      新发布的评论信息
+     * @param forumArticle 评论所属的文章信息
+     * @param pComment     父级评论信息
+     */
+    public void updateCommentInfo(ForumComment comment, ForumArticle forumArticle, ForumComment pComment) {
+        // 拿到系统设置的发表评论奖励积分数
+        Integer commentIntegral = SysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
+        if (commentIntegral > 0) {
+            this.userInfoService.updateUserIntegral(comment.getUserId(), UserIntegralOperTypeEnum.POST_COMMENT, UserIntegralChangeTypeEnum.ADD.getChangeType(), commentIntegral);
+        }
+
+        if (comment.getPCommentId() == 0) {
+            this.forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.COMMENT_COUNT.getType(), 1, comment.getArticleId());
+        }
+
+        //记录消息
+        UserMessage userMessage = new UserMessage();
+        userMessage.setMessageType(MessageTypeEnum.COMMENT.getType());
+        userMessage.setCreateTime(new Date());
+        userMessage.setArticleId(forumArticle.getArticleId());
+        userMessage.setCommentId(comment.getCommentId());
+        userMessage.setSendUserId(comment.getUserId());
+        userMessage.setSendNickName(comment.getNickName());
+        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+        userMessage.setMessageContent(comment.getContent());
+        userMessage.setArticleTitle(forumArticle.getTitle());
+        if (comment.getPCommentId() == 0) {
+            userMessage.setReceivedUserId(forumArticle.getUserId());
+        } else if (comment.getPCommentId() != 0 && StringUtils.isEmpty(comment.getReplyUserId())) {
+            userMessage.setReceivedUserId(pComment.getUserId());
+        } else if (comment.getPCommentId() != 0 && !StringUtils.isEmpty(comment.getReplyUserId())) {
+            userMessage.setReceivedUserId(comment.getReplyUserId());
+        }
+        if (!comment.getUserId().equals(userMessage.getReceivedUserId())) {
+            userMessageService.add(userMessage);
+        }
     }
 }

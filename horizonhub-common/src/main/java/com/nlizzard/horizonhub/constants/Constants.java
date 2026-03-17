@@ -2,26 +2,40 @@ package com.nlizzard.horizonhub.constants;
 
 public class Constants {
 
+    public static final Integer LENGTH_200 = 200;
+    public static final Integer LENGTH_190 = 190;
+    public static final Integer LENGTH_15 = 15;
+
     // 注册赠送积分
     public static final Integer REGISTER_GIFT_INTEGRAL = 5;
     // 邮箱验证码长度
     public static final Integer EMAIL_CODE_LENGTH = 5;
     // 邮箱验证码过期时间，单位：分钟
     public static final Integer EMAIL_CODE_EXPIRED_MINUTE = 15;
-    // session中登录注册的图片验证码的key
+    // session 中登录注册的图片验证码的key
     public static final String CHECK_CODE_KEY = "check_code";
-    // session中发送邮箱验证码的图片验证码的key
+    // session 中发送邮箱验证码的图片验证码的key
     public static final String CHECK_CODE_KEY_EMAIL = "check_code_email";
-    // 用户ID长度
+    // 用户 ID 长度
     public static final Integer USER_ID_LENGTH = 19;
     // 内存中系统设置的key，用concurrentHashMap存储
     public static final String SYS_SETTING_KEY = "sys_setting";
-    // session中用户信息的key
+    // session 中用户信息的 key
     public static final String SESSION_KEY = "session_key";
-    // ip省份默认未知
+    // ip 省份默认未知
     public static final String IP_PROVINCE_DEFAULT = "未知";
     // 论坛文件存放位置的文件夹路径前缀
-    public static final String FILE_FOLDER_FILE = "/file/";
+    public static final String FILE_FOLDER_FILE = "/file";
+    // 论坛文件临时存放路径前缀
+    public static final String FILE_FOLDER_TEMP = "temp";
+    // 论坛用户头像存放位置的文件夹路径前缀
+    public static final String FILE_FOLDER_AVATAR = "avatar";
     // 论坛文章附件存放位置的文件夹路径前缀
-    public static final String FILE_FOLDER_ATTACHMENT = "attachment/";
+    public static final String FILE_FOLDER_ATTACHMENT = "attachment";
+    // 图片存放位置的文件夹路径前缀
+    public static final String FILE_FOLDER_IMAGE = "images";
+    // 图片文件后缀列表
+    public static final String[] IMAGE_ALL_SUFFIX = new String[]{".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG", ".gif", ".GIF", ".bmp", ".BMP"};
+    // 文章附件文件后缀列表
+    public static final String[] ATTACHMENT_ALL_SUFFIX = new String[]{".zip", ".ZIP", ".rar", ".RAR"};
 }

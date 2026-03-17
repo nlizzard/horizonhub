@@ -3,6 +3,7 @@ package com.nlizzard.horizonhub.service;
 import com.nlizzard.horizonhub.entity.pojo.ForumComment;
 import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -66,4 +67,12 @@ public interface ForumCommentService {
      * @param topType   置顶类型（0-未置顶，1-置顶）
      */
     void changeTopType(String userId, Integer commentId, Integer topType);
+
+    /**
+     * 发表评论
+     *
+     * @param comment 评论信息
+     * @param file    评论图片
+     */
+    void postComment(ForumComment comment, MultipartFile file);
 }
