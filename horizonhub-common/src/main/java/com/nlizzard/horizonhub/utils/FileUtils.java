@@ -33,7 +33,7 @@ public class FileUtils {
      *
      * @param file           文件对象
      * @param uploadTypeEnum 上传类型枚举
-     * @param folder         文件夹名称
+     * @param folder         文件夹名称(特殊：头像的话，这个值传用户ID)
      */
     public FileUploadDto uploadFile2Local(MultipartFile file,
                                           FileUploadTypeEnum uploadTypeEnum,
@@ -49,12 +49,12 @@ public class FileUtils {
             if (!ArrayUtils.contains(uploadTypeEnum.getSuffixArray(), fileSuffix)) {
                 throw new BusinessException("文件类型不正确");
             }
-            String month = DateUtil.format(new Date(), DateTimePatternEnum.YYYY_MM.getPattern());
+            String month = DateUtil.format(new Date(), DateTimePatternEnum.YYYYMM.getPattern());
             String baseFolder = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE;
             File targetFileFolder = new File(baseFolder + File.separator + folder + File.separator + month + File.separator);
             String fileName = IdUtil.getSnowflakeNextIdStr() + fileSuffix;
             File targetFile = new File(targetFileFolder.getPath() + File.separator + fileName);
-            String localPath = month + "/" + fileName;
+            String localPath = month + File.separator + fileName;
 
             // 头像特殊处理，直接放在avatar文件夹下
             if (uploadTypeEnum == FileUploadTypeEnum.AVATAR) {
@@ -72,7 +72,8 @@ public class FileUtils {
                 String scaledImageName = targetFile.getName().replace(".", "_.");
                 File scaledImageFile = new File(targetFile.getParent() + File.separator + scaledImageName);
                 ImgUtil.scale(targetFile, scaledImageFile, 200, 200, Color.WHITE);
-            } else if (uploadTypeEnum == FileUploadTypeEnum.ARTICLE_ATTACHMENT) {
+            } else if (uploadTypeEnum == FileUploadTypeEnum.AVATAR || uploadTypeEnum == FileUploadTypeEnum.ARTICLE_COVER) {
+                // 头像和文章封面直接缩放原图
                 ImgUtil.scale(targetFile, targetFile, 200, 200, Color.WHITE);
             }
             uploadDto.setLocalPath(localPath);

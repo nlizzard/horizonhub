@@ -88,7 +88,7 @@ public class FileController extends BaseController {
             File uploadFile = new File(folderPath + File.separator + fileRealName);
             // 保存文件
             file.transferTo(uploadFile);
-            return Constants.FILE_FOLDER_TEMP + File.separator + fileRealName;
+            return Constants.FILE_FOLDER_TEMP + "/" + fileRealName;
         } catch (Exception e) {
             logger.error("上传文件失败", e);
             throw new BusinessException("上传文件失败");

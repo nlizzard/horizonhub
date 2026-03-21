@@ -6,10 +6,7 @@ import com.nlizzard.horizonhub.basecontroller.BaseController;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
-import com.nlizzard.horizonhub.entity.enums.ArticleOrderTypeEnum;
-import com.nlizzard.horizonhub.entity.enums.ArticleStatusEnum;
-import com.nlizzard.horizonhub.entity.enums.OperRecordOpTypeEnum;
-import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
+import com.nlizzard.horizonhub.entity.enums.*;
 import com.nlizzard.horizonhub.entity.pojo.*;
 import com.nlizzard.horizonhub.entity.query.ForumArticleAttachmentQuery;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
@@ -21,15 +18,17 @@ import com.nlizzard.horizonhub.entity.vo.web.ForumArticleVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.*;
 import com.nlizzard.horizonhub.utils.CopyTools;
+import com.nlizzard.horizonhub.utils.StringTools;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -57,8 +56,12 @@ public class ForumArticleController extends BaseController {
 
     @Resource
     private ForumArticleAttachmentDownloadService forumArticleAttachmentDownloadService;
-    @Autowired
+
+    @Resource
     private WebConfig webConfig;
+
+    @Resource
+    private ForumBoardService forumBoardService;
 
     /**
      * 加载文章列表（首页）
@@ -94,6 +97,76 @@ public class ForumArticleController extends BaseController {
         PaginationResultVO<ForumArticle> resultVO = forumArticleService.findListByPage(articleQuery);
         // 转换为 VO 对象并返回
         return getSuccessResponseVO(convert2PaginationVO(resultVO, ForumArticleVO.class));
+    }
+
+    /**
+     * 加载文章板块树（发帖页）
+     *
+     * @param session
+     * @return
+     */
+    @RequestMapping("/loadBoard4Post")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO<List<ForumBoard>> loadBoard4Post(HttpSession session) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        Integer postType = ForumBoardPostTypeEnum.ALL_BOARD.getCode(); // 传null,sql语句就不会加上post_type条件,就可以查询所有板块
+        if (!userDto.getAdmin()) {
+            postType = ForumBoardPostTypeEnum.USER_BOARD.getCode();
+        }
+        return getSuccessResponseVO(forumBoardService.getBoardTree(postType));
+    }
+
+
+    /**
+     * fatie
+     *
+     * @param session
+     * @param cover           封面图片
+     * @param attachment      附件
+     * @param integral        下载附件需要的积分
+     * @param pBoardId        父级板块 ID
+     * @param boardId         板块 ID
+     * @param title           文章标题
+     * @param content         文章内容（HTML）
+     * @param markdownContent 文章内容（Markdown）
+     * @param editorType      编辑器类型 1:富文本编辑器 2:Markdown 编辑器
+     * @param summary         文章摘要
+     * @return
+     */
+    @RequestMapping("/postArticle")
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    public ResponseVO<String> postArticle(HttpSession session,
+                                          MultipartFile cover,
+                                          MultipartFile attachment,
+                                          Integer integral,
+                                          @VerifyParam(required = true) Integer pBoardId,
+                                          Integer boardId,
+                                          @VerifyParam(required = true, max = 50) String title,
+                                          @VerifyParam String content,
+                                          String markdownContent,
+                                          @VerifyParam(required = true) Integer editorType,
+                                          @VerifyParam(max = 200) String summary) {
+        title = StringTools.escapeTitle(title);
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        ForumArticle forumArticle = new ForumArticle();
+        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setBoardId(boardId);
+        forumArticle.setTitle(title);
+        forumArticle.setContent(content);
+        if (EditorTypeEnum.MARKDOWN.getType().equals(editorType) && StringUtils.isEmpty(markdownContent)) {
+            throw new BusinessException("编辑器为Markdown编辑器,Markdown内容不能为空");
+        }
+        forumArticle.setMarkdownContent(markdownContent);
+        forumArticle.setEditorType(editorType);
+        forumArticle.setSummary(summary);
+        forumArticle.setUserId(userDto.getUserId());
+        forumArticle.setNickName(userDto.getNickName());
+        forumArticle.setUserIpAddress(userDto.getProvince());
+        //附件信息
+        ForumArticleAttachment forumArticleAttachment = new ForumArticleAttachment();
+        forumArticleAttachment.setIntegral(integral == null ? 0 : integral);
+        forumArticleService.postArticle(userDto.getAdmin(), forumArticle, forumArticleAttachment, cover, attachment);
+        return getSuccessResponseVO(forumArticle.getArticleId());
     }
 
     /**

@@ -38,4 +38,8 @@ public class Constants {
     public static final String[] IMAGE_ALL_SUFFIX = new String[]{".png", ".PNG", ".jpg", ".JPG", ".jpeg", ".JPEG", ".gif", ".GIF", ".bmp", ".BMP"};
     // 文章附件文件后缀列表
     public static final String[] ATTACHMENT_ALL_SUFFIX = new String[]{".zip", ".ZIP", ".rar", ".RAR"};
+    // temp图片访问地址前缀
+    public static final String READ_IMAGE_PATH = "/api/file/getImage/";
+    // 1M 文件大小，单位：字节
+    public static final Integer FILE_SIZE_1M = 1024 * 1024;
 }

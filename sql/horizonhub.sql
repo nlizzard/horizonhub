@@ -32,7 +32,7 @@ CREATE TABLE `email_code` (
 -- ----------------------------
 DROP TABLE IF EXISTS `forum_article`;
 CREATE TABLE `forum_article` (
-  `article_id` varchar(15) NOT NULL COMMENT '文章ID',
+  `article_id` varchar(19) NOT NULL COMMENT '文章ID',
   `board_id` int(11) DEFAULT NULL COMMENT '板块ID',
   `board_name` varchar(50) DEFAULT NULL COMMENT '板块名称',
   `p_board_id` int(11) DEFAULT NULL COMMENT '父级板块ID',
@@ -68,8 +68,8 @@ CREATE TABLE `forum_article` (
 -- ----------------------------
 DROP TABLE IF EXISTS `forum_article_attachment`;
 CREATE TABLE `forum_article_attachment` (
-  `file_id` varchar(15) NOT NULL COMMENT '文件ID',
-  `article_id` varchar(15) NOT NULL COMMENT '文章ID',
+  `file_id` varchar(19) NOT NULL COMMENT '文件ID',
+  `article_id` varchar(19) NOT NULL COMMENT '文章ID',
   `user_id` varchar(19) DEFAULT NULL COMMENT '用户id',
   `file_size` bigint(20) DEFAULT NULL COMMENT '文件大小',
   `file_name` varchar(200) DEFAULT NULL COMMENT '文件名称',
@@ -87,9 +87,9 @@ CREATE TABLE `forum_article_attachment` (
 -- ----------------------------
 DROP TABLE IF EXISTS `forum_article_attachment_download`;
 CREATE TABLE `forum_article_attachment_download` (
-  `file_id` varchar(15) NOT NULL COMMENT '文件ID',
+  `file_id` varchar(19) NOT NULL COMMENT '文件ID',
   `user_id` varchar(19) NOT NULL COMMENT '用户id',
-  `article_id` varchar(15) NOT NULL COMMENT '文章ID',
+  `article_id` varchar(19) NOT NULL COMMENT '文章ID',
   `download_count` int(11) DEFAULT '1' COMMENT '文件下载次数',
   PRIMARY KEY (`file_id`,`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户附件下载';
@@ -116,7 +116,7 @@ DROP TABLE IF EXISTS `forum_comment`;
 CREATE TABLE `forum_comment` (
   `comment_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '评论ID',
   `p_comment_id` int(11) DEFAULT NULL COMMENT '父级评论ID',
-  `article_id` varchar(15) NOT NULL COMMENT '文章ID',
+  `article_id` varchar(19) NOT NULL COMMENT '文章ID',
   `content` varchar(800) DEFAULT NULL COMMENT '回复内容',
   `img_path` varchar(150) DEFAULT NULL COMMENT '图片',
   `user_id` varchar(19) NOT NULL COMMENT '用户ID',
@@ -144,7 +144,7 @@ DROP TABLE IF EXISTS `like_record`;
 CREATE TABLE `like_record` (
   `op_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `op_type` tinyint(4) DEFAULT NULL COMMENT '操作类型0:文章点赞 1:评论点赞',
-  `object_id` varchar(15) NOT NULL COMMENT '主体ID',
+  `object_id` varchar(19) NOT NULL COMMENT '主体ID',
   `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `create_time` datetime DEFAULT NULL COMMENT '发布时间',
   `author_user_id` varchar(19) DEFAULT NULL COMMENT '主体作者ID',
@@ -206,7 +206,7 @@ DROP TABLE IF EXISTS `user_message`;
 CREATE TABLE `user_message` (
   `message_id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `received_user_id` varchar(19) DEFAULT NULL COMMENT '接收人用户ID',
-  `article_id` varchar(15) DEFAULT NULL COMMENT '文章ID',
+  `article_id` varchar(19) DEFAULT NULL COMMENT '文章ID',
   `article_title` varchar(150) DEFAULT NULL COMMENT '文章标题',
   `comment_id` int(11) DEFAULT NULL COMMENT '评论ID',
   `send_user_id` varchar(19) DEFAULT NULL COMMENT '发送人用户ID',

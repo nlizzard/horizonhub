@@ -34,8 +34,25 @@ public class StringTools {
      *
      * @param fileName 文件全名（带后缀）
      */
-    public static final String getFileName(String fileName) {
+    public static String getFileName(String fileName) {
         fileName = fileName.substring(0, fileName.lastIndexOf("."));
         return fileName;
+    }
+
+    /**
+     * 转义 HTML 标签（适用于标题，空格和换行不转换）
+     *
+     * @param content 原始内容
+     * @return 转义后的内容
+     */
+    public static String escapeTitle(String content) {
+        if (StringUtils.isBlank(content)) {
+            return content;
+        }
+        content = content.replace("<", "&lt;");
+        content = content.replace(" ", "&nbsp;");
+        // 标题不准换行，直接替换成空格
+        content = content.replace("\n", "&nbsp;");
+        return content;
     }
 }

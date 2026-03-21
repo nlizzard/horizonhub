@@ -1,8 +1,10 @@
 package com.nlizzard.horizonhub.service;
 
 import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
+import com.nlizzard.horizonhub.entity.pojo.ForumArticleAttachment;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -64,4 +66,15 @@ public interface ForumArticleService {
      * @param articleId 文章 ID
      */
     ForumArticle readArticle(String articleId);
+
+    /**
+     * 发帖
+     *
+     * @param isAdmin                是否管理员发帖
+     * @param forumArticle           文章信息
+     * @param forumArticleAttachment 文章附件信息
+     * @param cover                  封面图片
+     * @param attachment             附件
+     */
+    void postArticle(Boolean isAdmin, ForumArticle forumArticle, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment);
 }
