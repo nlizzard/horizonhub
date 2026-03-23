@@ -77,4 +77,15 @@ public interface ForumArticleService {
      * @param attachment             附件
      */
     void postArticle(Boolean isAdmin, ForumArticle forumArticle, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment);
+
+    /**
+     * 更新文章
+     *
+     * @param isAdmin                是否管理员更新
+     * @param article                文章信息
+     * @param forumArticleAttachment 文章附件信息
+     * @param cover                  封面图片
+     * @param attachment             附件
+     */
+    void updateArticle(Boolean isAdmin, ForumArticle article, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment);
 }

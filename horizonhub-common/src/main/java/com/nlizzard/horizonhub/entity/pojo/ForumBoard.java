@@ -1,5 +1,7 @@
 package com.nlizzard.horizonhub.entity.pojo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -23,6 +25,7 @@ public class ForumBoard implements Serializable {
     /**
      * 父级板块ID
      */
+    @JsonProperty("pBoardId")
     private Integer pBoardId;
 
     /**

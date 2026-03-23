@@ -280,6 +280,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
      * @param isUpdate   是否是更新附件（如果是更新附件，则先删除之前的附件）
      */
     public void uploadAttachment(ForumArticle article, ForumArticleAttachment attachment, MultipartFile file, Boolean isUpdate) {
+        // 查询系统设置的附件大小限制，单位MB，转换成字节
         Integer allowSizeMb = SysCacheUtils.getSysSetting().getPostSetting().getAttachmentSize();
         long allowSize = (long) allowSizeMb * Constants.FILE_SIZE_1M;
         if (file.getSize() > allowSize) {
@@ -292,9 +293,10 @@ public class ForumArticleServiceImpl implements ForumArticleService {
             attachmentQuery.setArticleId(article.getArticleId());
             List<ForumArticleAttachment> articleAttachmentList = forumArticleAttachmentMapper.selectList(attachmentQuery);
             if (!articleAttachmentList.isEmpty()) {
+                // 当前系统设置了文章只能有一个附件，所以只会有一条记录  （可扩展）
                 dbInfo = articleAttachmentList.get(0);
                 //删除之前的附件
-                File formerAttachment = new File(appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + File.separator + Constants.FILE_FOLDER_ATTACHMENT + File.separator + dbInfo.getFilePath());
+                File formerAttachment = new File(appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + "/" + Constants.FILE_FOLDER_ATTACHMENT + "/" + dbInfo.getFilePath());
                 if (!formerAttachment.delete()) {
                     logger.error("删除附件文件失败，文件路径：{}", formerAttachment.getPath());
                 }
@@ -319,5 +321,84 @@ public class ForumArticleServiceImpl implements ForumArticleService {
             updateInfo.setFilePath(fileUploadDto.getLocalPath());
             forumArticleAttachmentMapper.updateByFileId(updateInfo, dbInfo.getFileId());
         }
+    }
+
+    /**
+     * 更新文章
+     */
+    @Override
+    public void updateArticle(Boolean isAdmin, ForumArticle article, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment) throws BusinessException {
+        // 判断文章所属权
+        ForumArticle dbInfo = forumArticleMapper.selectByArticleId(article.getArticleId());
+        if (!isAdmin && !dbInfo.getUserId().equals(article.getUserId())) {
+            throw new BusinessException("你没有权限修改该文章");
+        }
+        // 检验文章信息和所属的板块信息是否合法
+        checkArticle(isAdmin, article);
+        article.setLastUpdateTime(new Date());
+
+        // 上传封面
+        if (cover != null) {
+            FileUploadDto fileUploadDto = fileUtils.uploadFile2Local(cover, FileUploadTypeEnum.ARTICLE_COVER, Constants.FILE_FOLDER_IMAGE);
+            article.setCover(fileUploadDto.getLocalPath());
+        }
+        // 如果更新了附件，则上传附件（如果之前有附件则先删除之前的附件）
+        if (attachment != null) {
+            article.setAttachmentType(HasAttachmentEnum.YES.getCode());
+            //上传附件
+            uploadAttachment(article, forumArticleAttachment, attachment, true);
+        }
+
+        // 获取数据库中的附件
+        ForumArticleAttachmentQuery attachmentQuery = new ForumArticleAttachmentQuery();
+        attachmentQuery.setArticleId(article.getArticleId());
+        List<ForumArticleAttachment> articleAttachmentList = this.forumArticleAttachmentMapper.selectList(attachmentQuery);
+        ForumArticleAttachment dbAttachment = null;
+        if (!articleAttachmentList.isEmpty()) {
+            dbAttachment = articleAttachmentList.get(0);
+        }
+
+        // 数据库有附件
+        if (dbAttachment != null) {
+            // 此次更新把附件删了，则删除之前的附件（数据库记录和本地文件都删除）
+            if (article.getAttachmentType().equals(HasAttachmentEnum.NO.getCode())) {
+                //删除之前的附件
+                new File(appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + "/" + Constants.FILE_FOLDER_ATTACHMENT + "/" + dbAttachment.getFilePath()).delete();
+                this.forumArticleAttachmentMapper.deleteByFileId(dbAttachment.getFileId());
+            } else {
+                // 此次更新没有更改附件，检查是否需要修改信息
+                if (!dbAttachment.getIntegral().equals(forumArticleAttachment.getIntegral())) {
+                    ForumArticleAttachment integralUpdate = new ForumArticleAttachment();
+                    integralUpdate.setIntegral(forumArticleAttachment.getIntegral());
+                    this.forumArticleAttachmentMapper.updateByFileId(integralUpdate, dbAttachment.getFileId());
+                }
+            }
+        }
+        // 文章是否需要审核
+        if (isAdmin) {
+            article.setStatus(ArticleStatusEnum.AUDIT.getStatus());
+        } else {
+            SysSetting4AuditDto auditDto = SysCacheUtils.getSysSetting().getAuditSetting();
+            article.setStatus(auditDto.getPostAudit() ? ArticleStatusEnum.NO_AUDIT.getStatus() :
+                    ArticleStatusEnum.AUDIT.getStatus());
+        }
+
+        //替换图片
+        String content = article.getContent();
+        if (!StringUtils.isBlank(content)) {
+            String month = imageUtils.resetImagePathInHtml(content);
+            //避免替换博客中template关键，所以前后带上/
+            String replaceMonth = "/" + month + "/";
+            content = content.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
+            article.setContent(content);
+            String markdownContent = article.getMarkdownContent();
+            if (!StringUtils.isBlank(markdownContent)) {
+                markdownContent = markdownContent.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
+                article.setMarkdownContent(markdownContent);
+            }
+        }
+
+
+        forumArticleMapper.updateByArticleId(article, article.getArticleId());
     }
 }

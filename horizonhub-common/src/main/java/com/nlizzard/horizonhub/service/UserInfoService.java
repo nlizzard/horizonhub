@@ -5,6 +5,7 @@ import com.nlizzard.horizonhub.entity.enums.UserIntegralOperTypeEnum;
 import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -128,4 +129,12 @@ public interface UserInfoService {
      * @param emailCode 邮箱验证码
      */
     void resetPwd(String email, String password, String emailCode);
+
+    /**
+     * 更新用户信息接口
+     *
+     * @param userInfo 用户信息对象，包含要更新的字段和用户ID
+     * @param avatar   头像文件，如果不更新头像则传null
+     */
+    void updateUserInfo(UserInfo userInfo, MultipartFile avatar);
 }

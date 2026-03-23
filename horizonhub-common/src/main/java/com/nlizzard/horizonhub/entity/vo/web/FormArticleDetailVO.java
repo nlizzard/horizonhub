@@ -2,9 +2,12 @@ package com.nlizzard.horizonhub.entity.vo.web;
 
 import java.io.Serializable;
 
+// 组合了文章信息和附件信息VO
 public class FormArticleDetailVO implements Serializable {
     private ForumArticleVO forumArticle;
-    private ForumArticleAttachmentVo attachment;
+
+    private ForumArticleAttachmentVO attachment;
+
     private Boolean haveLike = false;
 
     public Boolean getHaveLike() {
@@ -23,11 +26,11 @@ public class FormArticleDetailVO implements Serializable {
         this.forumArticle = forumArticle;
     }
 
-    public ForumArticleAttachmentVo getAttachment() {
+    public ForumArticleAttachmentVO getAttachment() {
         return attachment;
     }
 
-    public void setAttachment(ForumArticleAttachmentVo attachment) {
+    public void setAttachment(ForumArticleAttachmentVO attachment) {
         this.attachment = attachment;
     }
 

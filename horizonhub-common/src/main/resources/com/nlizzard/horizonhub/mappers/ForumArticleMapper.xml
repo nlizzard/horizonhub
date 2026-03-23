@@ -121,11 +121,20 @@
         <if test="query.attachmentType != null">
             and attachment_type = #{query.attachmentType}
         </if>
-        <if test="query.status != null">
+        <if test="query.status != null and query.currentUserId == null">
             and status = #{query.status}
         </if>
-        <if test="query.currentUserId != null">
+        <if test="query.currentUserId != null and query.currentUserId != ''">
             and ((#{query.currentUserId} = user_id and status = 0) or status = 1)
+        </if>
+        <!--查询我评论的-->
+        <if test="query.commentUserId !=null and query.commentUserId !=''">
+            and article_id in (select article_id from forum_comment where user_id=#{query.commentUserId})
+            and status = 1
+        </if>
+        <!--查询我点赞的-->
+        <if test="query.likeUserId !=null and query.likeUserId !=''">
+            and article_id in (select object_id from like_record where user_id=#{query.likeUserId} and op_type = 0)
         </if>
     </sql>
 

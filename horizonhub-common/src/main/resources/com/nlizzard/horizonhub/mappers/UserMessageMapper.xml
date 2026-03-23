@@ -441,4 +441,32 @@
           and send_user_id = #{sendUserId}
           and message_type = #{messageType}
     </delete>
+
+    <!--selectUserMessageCount获取用户未读消息数-->
+    <select id="selectUserMessageCount" resultType="java.util.Map">
+        select message_type messageType, count(1) count
+        from user_message
+        where received_user_id = #{userId} and status = 1
+        group by message_type
+    </select>
+
+    <!--updateMessageStatusBatch 根据接收人id和消息类型批量更新消息-->
+    <update id="updateMessageStatusBatch">
+        update user_message
+        set status = #{status}
+        <where>
+            <if test="messageIds != null and messageIds.length() > 0">
+                message_id in
+                <foreach item="item" collection="list" open="(" close=")" separator=",">
+                    item
+                </foreach>
+            </if>
+            <if test="receivedUserId !=null and receivedUserId !=''">
+                and received_user_id = #{receivedUserId}
+            </if>
+            <if test="messageType !=null and messageType != ''">
+                and message_type = #{messageType}
+            </if>
+        </where>
+    </update>
 </mapper>

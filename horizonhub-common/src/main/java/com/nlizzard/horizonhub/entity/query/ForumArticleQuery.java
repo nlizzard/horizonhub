@@ -156,6 +156,16 @@ public class ForumArticleQuery extends BaseQuery {
      */
     private Integer status;
 
+    /**
+     * 评论用户ID
+     */
+    private String CommentUserId;
+
+    /**
+     * 点赞用户ID
+     */
+    private String LikeUserId;
+
     public void setArticleId(String articleId) {
         this.articleId = articleId;
     }
@@ -468,4 +478,19 @@ public class ForumArticleQuery extends BaseQuery {
         return this.lastUpdateTimeEnd;
     }
 
+    public String getCommentUserId() {
+        return CommentUserId;
+    }
+
+    public void setCommentUserId(String commentUserId) {
+        CommentUserId = commentUserId;
+    }
+
+    public String getLikeUserId() {
+        return LikeUserId;
+    }
+
+    public void setLikeUserId(String likeUserId) {
+        LikeUserId = likeUserId;
+    }
 }

@@ -19,6 +19,7 @@ import com.nlizzard.horizonhub.mappers.UserIntegralRecordMapper;
 import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.service.UserInfoService;
 import com.nlizzard.horizonhub.service.UserMessageService;
+import com.nlizzard.horizonhub.utils.FileUtils;
 import com.nlizzard.horizonhub.utils.JsonUtils;
 import com.nlizzard.horizonhub.utils.OKHttpUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -59,6 +61,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private WebConfig webConfig;
+
+    @Resource
+    private FileUtils fileUtils;
 
     /**
      * 根据条件查询列表
@@ -354,5 +359,17 @@ public class UserInfoServiceImpl implements UserInfoService {
         UserInfo updateInfo = new UserInfo();
         updateInfo.setPassword(SecureUtil.md5(password));
         this.userInfoMapper.updateByEmail(updateInfo, email);
+    }
+
+    /**
+     * 更新用户信息接口
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserInfo(UserInfo userInfo, MultipartFile avatar) {
+        userInfoMapper.updateByUserId(userInfo, userInfo.getUserId());
+        if (avatar != null) {
+            fileUtils.uploadFile2Local(avatar, FileUploadTypeEnum.AVATAR, userInfo.getUserId());
+        }
     }
 }

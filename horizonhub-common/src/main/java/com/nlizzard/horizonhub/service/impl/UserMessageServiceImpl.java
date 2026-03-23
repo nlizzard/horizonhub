@@ -1,5 +1,8 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import com.nlizzard.horizonhub.entity.dto.UserMessageCountDto;
+import com.nlizzard.horizonhub.entity.enums.MessageStatusEnum;
+import com.nlizzard.horizonhub.entity.enums.MessageTypeEnum;
 import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.pojo.UserMessage;
 import com.nlizzard.horizonhub.entity.query.UserMessageQuery;
@@ -11,6 +14,7 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @Description:用户消息ServiceImpl
@@ -130,4 +134,46 @@ public class UserMessageServiceImpl implements UserMessageService {
         return this.userMessageMapper.deleteByArticleIdAndCommentIdAndSendUserIdAndMessageType(articleId, commentId, sendUserId, messageType);
     }
 
+    /**
+     * 获取用户未读消息数量
+     */
+    @Override
+    public UserMessageCountDto getUserMessageCount(String userId) {
+        UserMessageCountDto messageCountDto = new UserMessageCountDto();
+        long totalCount = 0L;
+        List<Map<Object, Object>> mapList = this.userMessageMapper.selectUserMessageCount(userId);
+        for (Map<Object, Object> item : mapList) {
+            Integer type = (Integer) item.get("messageType");
+            Long count = (Long) item.get("count");
+            totalCount = totalCount + count;
+            MessageTypeEnum messageType = MessageTypeEnum.getByType(type);
+            if (messageType != null) {
+                switch (messageType) {
+                    case SYS:
+                        messageCountDto.setSys(count);
+                        break;
+                    case COMMENT:
+                        messageCountDto.setReply(count);
+                        break;
+                    case ARTICLE_LIKE:
+                        messageCountDto.setLikePost(count);
+                        break;
+                    case COMMENT_LIKE:
+                        messageCountDto.setLikeComment(count);
+                        break;
+                    case DOWNLOAD_ATTACHMENT:
+                        messageCountDto.setDownloadAttachment(count);
+                        break;
+                    default:
+                }
+            }
+        }
+        messageCountDto.setTotal(totalCount);
+        return messageCountDto;
+    }
+
+    @Override
+    public void readMessageByType(String receivedUserId, Integer messageType) {
+        this.userMessageMapper.updateMessageStatusBatch(null, receivedUserId, messageType, MessageStatusEnum.READ.getStatus());
+    }
 }

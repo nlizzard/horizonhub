@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 文件信息
  */
-public class ForumArticleAttachmentVo implements Serializable {
+public class ForumArticleAttachmentVO implements Serializable {
 
 
     /**
@@ -85,3 +85,4 @@ public class ForumArticleAttachmentVo implements Serializable {
         this.integral = integral;
     }
 }
+

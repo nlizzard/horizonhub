@@ -13,7 +13,8 @@ import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.entity.vo.web.FormArticleDetailVO;
-import com.nlizzard.horizonhub.entity.vo.web.ForumArticleAttachmentVo;
+import com.nlizzard.horizonhub.entity.vo.web.FormArticleUpdateDetailVO;
+import com.nlizzard.horizonhub.entity.vo.web.ForumArticleAttachmentVO;
 import com.nlizzard.horizonhub.entity.vo.web.ForumArticleVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.*;
@@ -74,7 +75,11 @@ public class ForumArticleController extends BaseController {
      * @return
      */
     @RequestMapping("/loadArticle")
-    public ResponseVO<PaginationResultVO<ForumArticleVO>> loadArticle(HttpSession session, Integer boardId, Integer pBoardId, Integer orderType, Integer pageNo) {
+    public ResponseVO<PaginationResultVO<ForumArticleVO>> loadArticle(HttpSession session,
+                                                                      Integer boardId,
+                                                                      Integer pBoardId,
+                                                                      Integer orderType,
+                                                                      Integer pageNo) {
         ForumArticleQuery articleQuery = new ForumArticleQuery();
         // 如果boardId为0或null，则查询所有板块的文章
         articleQuery.setBoardId(boardId == null || boardId == 0 ? null : boardId);
@@ -118,7 +123,7 @@ public class ForumArticleController extends BaseController {
 
 
     /**
-     * fatie
+     * 发布文章
      *
      * @param session
      * @param cover           封面图片
@@ -198,7 +203,7 @@ public class ForumArticleController extends BaseController {
             articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
             List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
             if (!forumArticleAttachmentList.isEmpty()) {
-                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVo.class));
+                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVO.class));
             }
         }
         // 如果用户已登录，则查询用户是否点赞过该文章并设置到VO中
@@ -209,6 +214,92 @@ public class ForumArticleController extends BaseController {
             }
         }
         return getSuccessResponseVO(detailVO);
+    }
+
+    /**
+     * 获取文章详情（编辑文章时调用）
+     *
+     * @param session
+     * @param articleId 文章 ID
+     * @return
+     */
+    @RequestMapping("/articleDetail4Update")
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    public ResponseVO<FormArticleUpdateDetailVO> articleDetail4Update(HttpSession session,
+                                                                      @VerifyParam(required = true) String articleId) {
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        ForumArticle forumArticle = forumArticleService.getForumArticleByArticleId(articleId);
+        if (forumArticle == null || !forumArticle.getUserId().equals(userDto.getUserId())) {
+            throw new BusinessException("文章不存在或你没有权限编辑该文章");
+        }
+        // 组装文章详情和附件信息VO
+        FormArticleUpdateDetailVO detailVO = new FormArticleUpdateDetailVO();
+        detailVO.setForumArticle(forumArticle);
+        // 如果文章有附件，则查询附件信息并设置到VO中
+        if (forumArticle.getAttachmentType().equals(HasAttachmentEnum.YES.getCode())) {
+            ForumArticleAttachmentQuery articleAttachmentQuery = new ForumArticleAttachmentQuery();
+            articleAttachmentQuery.setArticleId(forumArticle.getArticleId());
+            List<ForumArticleAttachment> forumArticleAttachmentList = forumArticleAttachmentService.findListByParam(articleAttachmentQuery);
+            if (!forumArticleAttachmentList.isEmpty()) {
+                detailVO.setAttachment(CopyTools.copy(forumArticleAttachmentList.get(0), ForumArticleAttachmentVO.class));
+            }
+        }
+        return getSuccessResponseVO(detailVO);
+    }
+
+    /**
+     * 更新文章
+     *
+     * @param session
+     * @param cover           封面图片
+     * @param attachment      附件
+     * @param integral        下载附件需要的积分
+     * @param articleId       文章 ID
+     * @param pBoardId        父级板块 ID
+     * @param boardId         板块 ID
+     * @param title           文章标题
+     * @param content         文章内容（HTML）
+     * @param markdownContent 文章内容（Markdown）
+     * @param editorType      编辑器类型 1:富文本编辑器 2:Markdown 编辑器
+     * @param summary         文章摘要
+     * @param attachmentType  附件类型 0:无附件 1:有附件
+     * @return
+     */
+    @RequestMapping("/updateArticle")
+    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    public ResponseVO<String> updateArticle(HttpSession session,
+                                            MultipartFile cover,
+                                            MultipartFile attachment,
+                                            Integer integral,
+                                            @VerifyParam(required = true) String articleId,
+                                            @VerifyParam(required = true) Integer pBoardId,
+                                            Integer boardId,
+                                            @VerifyParam(required = true, max = 150) String title,
+                                            @VerifyParam(required = true) String content,
+                                            String markdownContent,
+                                            @VerifyParam(required = true) Integer editorType,
+                                            @VerifyParam(max = 200) String summary,
+                                            @VerifyParam(required = true) Integer attachmentType) {
+        title = StringTools.escapeTitle(title);
+        SessionWebUserDto userDto = getUserInfoFromSession(session);
+        ForumArticle forumArticle = new ForumArticle();
+        forumArticle.setArticleId(articleId);
+        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setBoardId(boardId);
+        forumArticle.setTitle(title);
+        forumArticle.setContent(content);
+        forumArticle.setMarkdownContent(markdownContent);
+        forumArticle.setEditorType(editorType);
+        forumArticle.setSummary(summary);
+        forumArticle.setUserIpAddress(userDto.getProvince());
+        forumArticle.setAttachmentType(attachmentType);
+        forumArticle.setUserId(userDto.getUserId());
+        //附件信息
+        ForumArticleAttachment forumArticleAttachment = new ForumArticleAttachment();
+        forumArticleAttachment.setIntegral(integral == null ? 0 : integral);
+
+        forumArticleService.updateArticle(userDto.getAdmin(), forumArticle, forumArticleAttachment, cover, attachment);
+        return getSuccessResponseVO(forumArticle.getArticleId());
     }
 
     /**
@@ -305,5 +396,20 @@ public class ForumArticleController extends BaseController {
                 logger.error("IO异常", e);
             }
         }
+    }
+
+    /**
+     * 搜索
+     *
+     * @param keyword 关键词
+     * @return 分页的文章列表
+     */
+    @RequestMapping("/search")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO<PaginationResultVO<ForumArticle>> updateArticle(@VerifyParam(required = true) String keyword) {
+        ForumArticleQuery query = new ForumArticleQuery();
+        query.setTitleFuzzy(keyword);
+        PaginationResultVO<ForumArticle> result = forumArticleService.findListByPage(query);
+        return getSuccessResponseVO(result);
     }
 }

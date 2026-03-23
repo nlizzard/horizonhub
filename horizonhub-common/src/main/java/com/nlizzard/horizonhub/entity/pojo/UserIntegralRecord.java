@@ -2,6 +2,7 @@ package com.nlizzard.horizonhub.entity.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
+import com.nlizzard.horizonhub.entity.enums.UserIntegralOperTypeEnum;
 import com.nlizzard.horizonhub.utils.DateUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -37,9 +38,23 @@ public class UserIntegralRecord implements Serializable {
     /**
      * 创建时间
      */
-    @JsonFormat(pattern = "yyyy_MM_dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy_MM_dd", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy_MM_dd HH:mm:ss")
     private Date createTime;
+
+    /**
+     * 操作类型名称
+     */
+    private String operTypeName;
+
+    public String getOperTypeName() {
+        UserIntegralOperTypeEnum opTypeEnum = UserIntegralOperTypeEnum.getByType(operType);
+        return opTypeEnum == null ? "" : opTypeEnum.getDesc();
+    }
+
+    public void setOperTypeName(String operTypeName) {
+        this.operTypeName = operTypeName;
+    }
 
     public void setRecordId(Integer recordId) {
         this.recordId = recordId;

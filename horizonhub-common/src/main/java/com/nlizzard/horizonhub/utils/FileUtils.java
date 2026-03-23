@@ -51,15 +51,15 @@ public class FileUtils {
             }
             String month = DateUtil.format(new Date(), DateTimePatternEnum.YYYYMM.getPattern());
             String baseFolder = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE;
-            File targetFileFolder = new File(baseFolder + File.separator + folder + File.separator + month + File.separator);
+            File targetFileFolder = new File(baseFolder + "/" + folder + "/" + month + "/");
             String fileName = IdUtil.getSnowflakeNextIdStr() + fileSuffix;
-            File targetFile = new File(targetFileFolder.getPath() + File.separator + fileName);
-            String localPath = month + File.separator + fileName;
+            File targetFile = new File(targetFileFolder.getPath() + "/" + fileName);
+            String localPath = month + "/" + fileName;
 
             // 头像特殊处理，直接放在avatar文件夹下
             if (uploadTypeEnum == FileUploadTypeEnum.AVATAR) {
-                targetFileFolder = new File(baseFolder + File.separator + Constants.FILE_FOLDER_AVATAR);
-                targetFile = new File(targetFileFolder.getPath() + File.separator + folder + ".jpg");
+                targetFileFolder = new File(baseFolder + "/" + Constants.FILE_FOLDER_AVATAR);
+                targetFile = new File(targetFileFolder.getPath() + "/" + folder + ".jpg");
                 localPath = folder + ".jpg";
             }
             if (!targetFileFolder.exists()) {
@@ -70,7 +70,7 @@ public class FileUtils {
             if (uploadTypeEnum == FileUploadTypeEnum.COMMENT_IMAGE) {
                 // 缩放图名称最后加一个_
                 String scaledImageName = targetFile.getName().replace(".", "_.");
-                File scaledImageFile = new File(targetFile.getParent() + File.separator + scaledImageName);
+                File scaledImageFile = new File(targetFile.getParent() + "/" + scaledImageName);
                 ImgUtil.scale(targetFile, scaledImageFile, 200, 200, Color.WHITE);
             } else if (uploadTypeEnum == FileUploadTypeEnum.AVATAR || uploadTypeEnum == FileUploadTypeEnum.ARTICLE_COVER) {
                 // 头像和文章封面直接缩放原图
