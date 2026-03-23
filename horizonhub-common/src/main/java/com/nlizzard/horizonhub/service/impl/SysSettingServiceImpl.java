@@ -122,7 +122,7 @@ public class SysSettingServiceImpl implements SysSettingService {
      * 将系统设置初始化到内存中  在系统启动时调用  将系统设置加载到内存中  以便后续使用  避免每次查询数据库获取系统设置
      */
     @Override
-    public void initSysSettingToCache() {
+    public SysSettingDto initSysSettingToCache() {
         try {
             SysSettingDto sysSettingDto = new SysSettingDto();
             List<SysSetting> sysSettinglist = this.findListByParam(new SysSettingQuery());
@@ -148,6 +148,7 @@ public class SysSettingServiceImpl implements SysSettingService {
             }
             SysCacheUtils.setSysSettingMap(sysSettingDto);
             logger.info("系统设置写入内存成功");
+            return sysSettingDto;
         } catch (Exception e) {
             logger.error("系统设置写入内存失败", e);
             throw new BusinessException("系统设置写入内存失败");

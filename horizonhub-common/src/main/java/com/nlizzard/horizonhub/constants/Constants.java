@@ -42,4 +42,8 @@ public class Constants {
     public static final String READ_IMAGE_PATH = "/api/file/getImage/";
     // 1M 文件大小，单位：字节
     public static final Integer FILE_SIZE_1M = 1024 * 1024;
+    // 成功响应的状态信息
+    public static final String STATUS_SUCCESS = "success";
+    // 频率计数在Session中的前缀key
+    public static final String SESSION_KEY_FREQUENCY = "session_key_frequence";
 }

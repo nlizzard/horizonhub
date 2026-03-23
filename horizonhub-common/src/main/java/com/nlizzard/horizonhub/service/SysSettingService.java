@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service;
 
+import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
 import com.nlizzard.horizonhub.entity.pojo.SysSetting;
 import com.nlizzard.horizonhub.entity.query.SysSettingQuery;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
@@ -61,6 +62,6 @@ public interface SysSettingService {
     /**
      * 将系统设置初始化到内存中  在系统启动时调用  将系统设置加载到内存中  以便后续使用  避免每次查询数据库获取系统设置
      */
-    void initSysSettingToCache();
+    SysSettingDto initSysSettingToCache();
 
 }

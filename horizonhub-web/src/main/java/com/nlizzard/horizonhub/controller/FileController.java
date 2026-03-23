@@ -7,6 +7,7 @@ import com.nlizzard.horizonhub.basecontroller.BaseController;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
+import com.nlizzard.horizonhub.entity.enums.UserOperFrequencyTypeEnum;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import jakarta.annotation.Resource;
@@ -46,7 +47,7 @@ public class FileController extends BaseController {
      * @return 图片访问路径
      */
     @RequestMapping("uploadImage")
-    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true, frequencyType = UserOperFrequencyTypeEnum.IMAGE_UPLOAD)
     public ResponseVO<Map<String, String>> uploadImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException("请选择要上传的图片");

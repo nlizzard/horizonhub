@@ -89,7 +89,7 @@ public class ForumCommentController extends BaseController {
      * @return 更新后的评论信息
      */
     @RequestMapping("/doLike")
-    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_LIKE)
     public ResponseVO<ForumComment> doLike(HttpSession session,
                                            @VerifyParam(required = true) Integer commentId) {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
@@ -133,7 +133,7 @@ public class ForumCommentController extends BaseController {
      * @return
      */
     @RequestMapping("/postComment")
-    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_COMMENT)
     public ResponseVO<Object> postComment(HttpSession session,
                                           @VerifyParam(required = true) String articleId,
                                           @VerifyParam(required = true) Integer pCommentId,

@@ -139,7 +139,7 @@ public class ForumArticleController extends BaseController {
      * @return
      */
     @RequestMapping("/postArticle")
-    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_ARTICLE)
     public ResponseVO<String> postArticle(HttpSession session,
                                           MultipartFile cover,
                                           MultipartFile attachment,
@@ -310,7 +310,7 @@ public class ForumArticleController extends BaseController {
      * @return
      */
     @RequestMapping("/doLike")
-    @GlobalInterceptor(checkLogin = true, checkParams = true)
+    @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_LIKE)
     public ResponseVO<Void> doLike(HttpSession session, @VerifyParam(required = true) String articleId) {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
         likeRecordService.doLike(articleId, userDto.getUserId(), userDto.getNickName(), OperRecordOpTypeEnum.ARTICLE_LIKE);

@@ -8,7 +8,7 @@ public class AppConfig {
     /**
      * 是否是开发环境
      */
-    @Value("${isDev}")
+    @Value("${isDev.open:false}")
     private boolean isDev;
 
     /**
@@ -17,12 +17,22 @@ public class AppConfig {
     @Value("${projectFolder}")
     private String projectFolder;
 
+    /**
+     * 开发环境下测试用户邮箱
+     */
+    @Value("${isDev.testUserEmail}")
+    private String DevTestEmail;
+
     public String getProjectFolder() {
         return projectFolder;
     }
 
     public boolean getIsDev() {
         return isDev;
+    }
+
+    public String getDevTestEmail() {
+        return DevTestEmail;
     }
 }
 

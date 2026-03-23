@@ -35,6 +35,13 @@ ip:
 admin:
   emails: test111@qq.com
 # 是否处于开发模式，true，开发模式，false，生产模式
-isDev: false
+isDev:
+  open: false
+  testUserEmail: test_123456@test.com
 # 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
 projectFolder: E:/project/horizonhub
+#内部接口相关
+inner:
+  api:
+    appKey: horizonhub
+    appSecret: horizonhub_key

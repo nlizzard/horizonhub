@@ -1,5 +1,7 @@
 package com.nlizzard.horizonhub.annotation;
 
+import com.nlizzard.horizonhub.entity.enums.UserOperFrequencyTypeEnum;
+
 import java.lang.annotation.*;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
@@ -21,6 +23,13 @@ public @interface GlobalInterceptor {
      * @return
      */
     boolean checkParams() default false;
+
+    /**
+     * 检查的频率类型枚举
+     *
+     * @return
+     */
+    UserOperFrequencyTypeEnum frequencyType() default UserOperFrequencyTypeEnum.NO_CHECK;
 
     // TODO 频率校验
 }
