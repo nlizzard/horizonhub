@@ -690,4 +690,33 @@
         </set>
         where article_id=#{articleId}
     </update>
+    <!--批量更新板块名称-->
+    <update id="updateBoardNameBatch">
+        update forum_article
+        set
+        <if test="boardType == 0">
+            p_board_name = #{boardName}
+        </if>
+        <if test="boardType == 1">
+            board_name = #{boardName}
+        </if>
+        where
+        <if test="boardType == 0">
+            p_board_id = #{boardId}
+        </if>
+        <if test="boardType == 1">
+            board_id = #{boardId}
+        </if>
+    </update>
+
+    <!--重置评论数量-->
+    <update id="resetCommentCount">
+        update forum_article f
+        set f.comment_count = (select count(1) from forum_comment c where c.status =1 and c.p_comment_id = 0 and
+        c.article_id =f.article_id )
+        where article_id in
+        <foreach collection="articleIdIds" separator="," item="item" open="(" close="）">
+            #{item}
+        </foreach>
+    </update>
 </mapper>

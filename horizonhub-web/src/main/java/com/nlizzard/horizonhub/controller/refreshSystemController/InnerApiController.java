@@ -1,4 +1,4 @@
-package com.nlizzard.horizonhub.refreshSystemController;
+package com.nlizzard.horizonhub.controller.refreshSystemController;
 
 import cn.hutool.crypto.SecureUtil;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
@@ -32,7 +32,7 @@ public class InnerApiController extends BaseController {
      * @param sign
      * @return
      */
-    @RequestMapping("/refresSysSetting")
+    @RequestMapping("/refreshSysSetting")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<SysSettingDto> refreshSysSetting(@VerifyParam(required = true) String appKey,
                                                        @VerifyParam(required = true) Long timestamp,

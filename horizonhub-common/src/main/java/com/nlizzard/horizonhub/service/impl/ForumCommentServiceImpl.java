@@ -21,6 +21,7 @@ import com.nlizzard.horizonhub.utils.FileUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -52,6 +53,10 @@ public class ForumCommentServiceImpl implements ForumCommentService {
 
     @Resource
     private FileUtils fileUtils;
+
+    @Lazy
+    @Resource
+    private ForumCommentService forumCommentService;
 
     /**
      * 根据条件查询列表
@@ -282,5 +287,96 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         if (!comment.getUserId().equals(userMessage.getReceivedUserId())) {
             userMessageService.add(userMessage);
         }
+    }
+
+    /**
+     * 删除评论
+     *
+     */
+    @Override
+    public void delComment(String commentIds) {
+        String[] commentIdArray = commentIds.split(",");
+        for (String commentIdStr : commentIdArray) {
+            Integer commentId = Integer.parseInt(commentIdStr);
+            forumCommentService.delCommentSingle(commentId);
+        }
+    }
+
+    /**
+     * 删除单条评论
+     *
+     * @param commentId 评论 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void delCommentSingle(Integer commentId) {
+        ForumComment comment = forumCommentMapper.selectByCommentId(commentId);
+        // 如果评论不存在或者评论已经被删除，则不执行任何操作
+        if (null == comment || CommentStatusEnum.DEL.getStatus().equals(comment.getStatus())) {
+            return;
+        }
+        // 删除评论
+        ForumComment forumComment = new ForumComment();
+        forumComment.setStatus(CommentStatusEnum.DEL.getStatus());
+        forumCommentMapper.updateByCommentId(forumComment, commentId);
+
+        // 如果评论处于审核通过状态，则需要更新文章评论数、用户积分，并记录消息
+        if (CommentStatusEnum.AUDIT.getStatus().equals(comment.getStatus())) {
+            // 如果是一级评论被删除，则文章评论数减1
+            if (comment.getPCommentId() == 0) {
+                forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.COMMENT_COUNT.getType(), -1, comment.getArticleId());
+            }
+            // 拿到系统设置的发表评论奖励积分数，并扣除相应积分
+            Integer integral = SysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
+            userInfoService.updateUserIntegral(comment.getUserId(), UserIntegralOperTypeEnum.DEL_COMMENT, UserIntegralChangeTypeEnum.REDUCE.getChangeType(), integral);
+        }
+        // 记录消息
+        UserMessage userMessage = new UserMessage();
+        userMessage.setReceivedUserId(comment.getUserId());
+        userMessage.setMessageType(MessageTypeEnum.SYS.getType());
+        userMessage.setCreateTime(new Date());
+        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+        userMessage.setMessageContent("评论【" + (comment.getContent() == null ? "图片" : comment.getContent()) + "】被管理员删除");
+        userMessageService.add(userMessage);
+    }
+
+    /**
+     * 审核评论
+     *
+     * @param commentIds 评论 ID，逗号分割
+     */
+    @Override
+    public void auditComment(String commentIds) {
+        String[] commentIdArray = commentIds.split(",");
+        for (String commentIdStr : commentIdArray) {
+            Integer commentId = Integer.parseInt(commentIdStr);
+            forumCommentService.auditCommentSingle(commentId);
+        }
+    }
+
+    /**
+     * 审核单条评论
+     *
+     * @param commentId 评论 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void auditCommentSingle(Integer commentId) {
+        ForumComment comment = forumCommentMapper.selectByCommentId(commentId);
+        // 如果评论不存在或者评论状态不是待审核状态，则不执行任何操作
+        if (!CommentStatusEnum.NO_AUDIT.getStatus().equals(comment.getStatus())) {
+            return;
+        }
+        // 更新评论状态
+        ForumComment forumComment = new ForumComment();
+        forumComment.setStatus(CommentStatusEnum.AUDIT.getStatus());
+        forumCommentMapper.updateByCommentId(forumComment, commentId);
+
+        // 获取评论所属文章信息和父级评论信息
+        ForumArticle forumArticle = forumArticleMapper.selectByArticleId(comment.getArticleId());
+        ForumComment pComment = null;
+        if (comment.getPCommentId() != 0 && StringUtils.isBlank(comment.getReplyUserId())) {
+            pComment = forumCommentMapper.selectByCommentId(comment.getPCommentId());
+        }
+        //更新评论相关信息
+        updateCommentInfo(comment, forumArticle, pComment);
     }
 }

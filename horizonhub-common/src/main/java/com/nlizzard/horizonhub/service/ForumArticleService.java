@@ -88,4 +88,41 @@ public interface ForumArticleService {
      * @param attachment             附件
      */
     void updateArticle(Boolean isAdmin, ForumArticle article, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment);
+
+    /**
+     * 更新板块
+     *
+     * @param articleId 文章 ID
+     * @param pBoardId  父板块 ID
+     * @param boardId   板块 ID
+     */
+    void updateBoard(String articleId, Integer pBoardId, Integer boardId);
+
+    /**
+     * 删除文章
+     *
+     * @param articleIds 文章 ID，逗号分隔
+     */
+    void delArticle(String articleIds);
+
+    /**
+     * 删除单篇文章
+     *
+     * @param articleId 文章 ID
+     */
+    void delArticleSingle(String articleId);
+
+    /**
+     * 审核文章
+     *
+     * @param articleIds 文章 ID，逗号分隔
+     */
+    void auditArticle(String articleIds);
+
+    /**
+     * 审核单篇文章
+     *
+     * @param articleId 文章 ID
+     */
+    void auditArticleSingle(String articleId);
 }

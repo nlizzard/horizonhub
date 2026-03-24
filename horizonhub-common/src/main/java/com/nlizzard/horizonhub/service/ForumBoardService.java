@@ -64,4 +64,18 @@ public interface ForumBoardService {
      * @param postType 文章类型，0:管理员可发帖 1:所有人可发帖，null:所有板块
      */
     List<ForumBoard> getBoardTree(Integer postType);
+
+    /**
+     * 新增 或更新论坛版块信息
+     *
+     * @param forumBoard 论坛版块信息
+     */
+    void saveForumBoard(ForumBoard forumBoard);
+
+    /**
+     * 修改板块的优先级
+     *
+     * @param boardIds 逗号分隔的板块ID列表
+     */
+    void changeSort(String boardIds);
 }

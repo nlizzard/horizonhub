@@ -1,14 +1,19 @@
 package com.nlizzard.horizonhub.service.impl;
 
 import com.nlizzard.horizonhub.entity.enums.PageSize;
+import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
 import com.nlizzard.horizonhub.entity.pojo.ForumBoard;
+import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.ForumBoardQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
+import com.nlizzard.horizonhub.exception.BusinessException;
+import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
 import com.nlizzard.horizonhub.mappers.ForumBoardMapper;
 import com.nlizzard.horizonhub.service.ForumBoardService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +28,9 @@ public class ForumBoardServiceImpl implements ForumBoardService {
 
     @Resource
     private ForumBoardMapper<ForumBoard, ForumBoardQuery> forumBoardMapper;
+
+    @Resource
+    private ForumArticleMapper<ForumArticle, ForumArticleQuery> forumArticleMapper;
 
     /**
      * 根据条件查询列表
@@ -131,5 +139,55 @@ public class ForumBoardServiceImpl implements ForumBoardService {
             }
         }
         return treeList;
+    }
+
+
+    /**
+     * 新增 或更新论坛版块信息
+     *
+     * @param forumBoard 论坛版块信息
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveForumBoard(ForumBoard forumBoard) {
+        // 如果boardId为空，表示新增，否则表示修改
+        if (forumBoard.getBoardId() == null) {
+            ForumBoardQuery boardQuery = new ForumBoardQuery();
+            boardQuery.setPBoardId(forumBoard.getPBoardId());
+            Integer count = this.forumBoardMapper.selectCount(boardQuery);
+            // 板块排序默认为同级板块数量+1，即新增的板块排在最后
+            forumBoard.setSort(count + 1);
+            this.forumBoardMapper.insert(forumBoard);
+        } else { // 修改板块信息
+            ForumBoard dbInfo = this.forumBoardMapper.selectByBoardId(forumBoard.getBoardId());
+            if (dbInfo == null) {
+                throw new BusinessException("板块不存在");
+            }
+            this.forumBoardMapper.updateByBoardId(forumBoard, forumBoard.getBoardId());
+            // 修改板块名称后需要同步更新文章表中的板块名称
+            if (!dbInfo.getBoardName().equals(forumBoard.getBoardName())) {
+                forumArticleMapper.updateBoardNameBatch(dbInfo.getPBoardId() == 0 ? 0 : 1, forumBoard.getBoardName(), forumBoard.getBoardId());
+            }
+        }
+    }
+
+    /**
+     * 调整板块排序
+     *
+     * @param boardIds 逗号分隔的板块ID列表
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeSort(String boardIds) {
+        String[] boardIdArray = boardIds.split(",");
+        Integer index = 1;
+        // 遍历板块ID列表，按照新的排序顺序更新每个板块的sort字段
+        for (String boardIdStr : boardIdArray) {
+            Integer boardId = Integer.parseInt(boardIdStr);
+            ForumBoard board = new ForumBoard();
+            board.setSort(index);
+            forumBoardMapper.updateByBoardId(board, boardId);
+            index++;
+        }
     }
 }

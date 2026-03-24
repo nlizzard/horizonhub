@@ -9,6 +9,7 @@ import com.nlizzard.horizonhub.entity.enums.*;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticle;
 import com.nlizzard.horizonhub.entity.pojo.ForumArticleAttachment;
 import com.nlizzard.horizonhub.entity.pojo.ForumBoard;
+import com.nlizzard.horizonhub.entity.pojo.UserMessage;
 import com.nlizzard.horizonhub.entity.query.ForumArticleAttachmentQuery;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
@@ -19,6 +20,7 @@ import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
 import com.nlizzard.horizonhub.service.ForumArticleService;
 import com.nlizzard.horizonhub.service.ForumBoardService;
 import com.nlizzard.horizonhub.service.UserInfoService;
+import com.nlizzard.horizonhub.service.UserMessageService;
 import com.nlizzard.horizonhub.utils.FileUtils;
 import com.nlizzard.horizonhub.utils.ImageUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
@@ -26,6 +28,7 @@ import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -64,6 +67,13 @@ public class ForumArticleServiceImpl implements ForumArticleService {
 
     @Resource
     private ForumArticleAttachmentMapper<ForumArticleAttachment, ForumArticleAttachmentQuery> forumArticleAttachmentMapper;
+
+    @Lazy
+    @Resource
+    private ForumArticleService forumArticleService;
+
+    @Resource
+    private UserMessageService userMessageService;
 
     /**
      * 根据条件查询列表
@@ -400,5 +410,102 @@ public class ForumArticleServiceImpl implements ForumArticleService {
 
 
         forumArticleMapper.updateByArticleId(article, article.getArticleId());
+    }
+
+    /**
+     * 更新文章板块信息
+     *
+     * @param articleId 文章 ID
+     * @param pBoardId  父板块 ID
+     * @param boardId   板块 ID
+     */
+    @Override
+    public void updateBoard(String articleId, Integer pBoardId, Integer boardId) {
+        ForumArticle forumArticle = new ForumArticle();
+        forumArticle.setPBoardId(pBoardId);
+        forumArticle.setBoardId(boardId);
+        checkBoardInfo(true, forumArticle);
+        forumArticleMapper.updateByArticleId(forumArticle, articleId);
+    }
+
+    /**
+     * 批量删除文章
+     *
+     * @param articleIds 文章 ID，逗号分隔
+     */
+    @Override
+    public void delArticle(String articleIds) {
+        String[] articleIdArray = articleIds.split(",");
+        for (String articleId : articleIdArray) {
+            forumArticleService.delArticleSingle(articleId);
+        }
+    }
+
+    /**
+     * 删除单个文章
+     *
+     * @param articleId 文章 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void delArticleSingle(String articleId) {
+        ForumArticle article = forumArticleMapper.selectByArticleId(articleId);
+        // 文章不存在或者已经被删除了，则不进行任何操作
+        if (null == article || ArticleStatusEnum.DEL.getStatus().equals(article.getStatus())) {
+            return;
+        }
+        ForumArticle updateInfo = new ForumArticle();
+        updateInfo.setStatus(ArticleStatusEnum.DEL.getStatus());
+        forumArticleMapper.updateByArticleId(updateInfo, articleId);
+
+        // 没收发帖积分
+        Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
+        if (integral > 0 && ArticleStatusEnum.AUDIT.getStatus().equals(article.getStatus())) {
+            userInfoService.updateUserIntegral(article.getUserId(), UserIntegralOperTypeEnum.DEL_ARTICLE, UserIntegralChangeTypeEnum.REDUCE.getChangeType(),
+                    integral);
+        }
+        // 发送系统消息
+        UserMessage userMessage = new UserMessage();
+        userMessage.setReceivedUserId(article.getUserId());
+        userMessage.setMessageType(MessageTypeEnum.SYS.getType());
+        userMessage.setCreateTime(new Date());
+        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+        userMessage.setMessageContent("文章【" + article.getTitle() + "】被管理员删除");
+        userMessageService.add(userMessage);
+    }
+
+    /**
+     * 批量审核文章
+     *
+     * @param articleIds 文章 ID，逗号分隔
+     */
+    @Override
+    public void auditArticle(String articleIds) {
+        String[] articleIdArray = articleIds.split(",");
+        for (String articleId : articleIdArray) {
+            forumArticleService.auditArticleSingle(articleId);
+        }
+    }
+
+    /**
+     * 审核单个文章
+     *
+     * @param articleId 文章 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void auditArticleSingle(String articleId) {
+        ForumArticle article = getForumArticleByArticleId(articleId);
+        // 文章不存在或者已经审核通过了，则不进行任何操作
+        if (article == null || !ArticleStatusEnum.NO_AUDIT.getStatus().equals(article.getStatus())) {
+            return;
+        }
+        ForumArticle updateInfo = new ForumArticle();
+        updateInfo.setStatus(ArticleStatusEnum.AUDIT.getStatus());
+        forumArticleMapper.updateByArticleId(updateInfo, articleId);
+        // 发帖积分发放
+        Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
+        if (integral > 0) {
+            userInfoService.updateUserIntegral(article.getUserId(), UserIntegralOperTypeEnum.POST_ARTICLE, UserIntegralChangeTypeEnum.ADD.getChangeType(),
+                    integral);
+        }
     }
 }

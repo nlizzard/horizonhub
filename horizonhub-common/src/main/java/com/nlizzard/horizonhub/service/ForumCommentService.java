@@ -75,4 +75,32 @@ public interface ForumCommentService {
      * @param file    评论图片
      */
     void postComment(ForumComment comment, MultipartFile file);
+
+    /**
+     * 删除评论
+     *
+     * @param commentIds 评论 ID，逗号分隔
+     */
+    void delComment(String commentIds);
+
+    /**
+     * 删除单条评论
+     *
+     * @param commentId 评论 ID
+     */
+    void delCommentSingle(Integer commentId);
+
+    /**
+     * 审核评论
+     *
+     * @param commentIds 评论 ID，逗号分割
+     */
+    void auditComment(String commentIds);
+
+    /**
+     * 审核单条评论
+     *
+     * @param commentId 评论 ID
+     */
+    void auditCommentSingle(Integer commentId);
 }

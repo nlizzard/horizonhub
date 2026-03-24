@@ -1,10 +1,51 @@
+# 应用相关配置
 server:
-  port: 8081
+  port: 12345
   servlet:
     context-path: /api
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 spring:
+  # 数据库相关配置
   datasource:
-    url: jdbc:mysql://localhost:3306/horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  # 发送邮件相关配置
+  mail:
+    username: xxxx@qq.com
+    host: smtp.qq.com
+    port: 465
+    password: xxxx
+    default-encoding: UTF-8
+# 是否使用邮箱验证码，false，验证码打印在控制台，true，发送邮件
+send:
+  mail:
+    open: false
+# ip地址查询接口（用于获取具体省份）
+ip:
+  address:
+    province:
+      query:
+        url: https://whois.pconline.com.cn/ipJson.jsp?json=true&ip=
+# 管理员邮箱地址（多个使用，分隔）
+admin:
+  emails: test111@qq.com
+  # 后台登录的账号密码
+  adminName: admin
+  password: 123456
+# 是否处于开发模式，true，开发模式，false，生产模式
+isDev:
+  open: false
+  testUserEmail: test_123456@test.com
+# 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
+projectFolder: E:/project/horizonhub
+#内部接口相关
+inner:
+  api:
+    url: http://localhost:8080/api/innerApi/refreshSysSetting
+    appKey: horizonHub
+    appSecret: horizonHub_key
