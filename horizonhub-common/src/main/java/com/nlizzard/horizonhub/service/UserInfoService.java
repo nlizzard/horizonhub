@@ -137,4 +137,21 @@ public interface UserInfoService {
      * @param avatar   头像文件，如果不更新头像则传null
      */
     void updateUserInfo(UserInfo userInfo, MultipartFile avatar);
+
+    /**
+     * 更新用户状态
+     *
+     * @param status 状态值：0禁用，1启用
+     * @param userId 用户Id
+     */
+    void updateUserStatus(Integer status, String userId);
+
+    /**
+     * 发送消息
+     *
+     * @param userId   接收消息的用户ID
+     * @param message  消息内容
+     * @param integral 积分
+     */
+    void sendMessage(String userId, String message, Integer integral);
 }

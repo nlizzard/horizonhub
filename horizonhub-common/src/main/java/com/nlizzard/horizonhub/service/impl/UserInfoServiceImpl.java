@@ -6,14 +6,16 @@ import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.*;
-import com.nlizzard.horizonhub.entity.pojo.UserInfo;
-import com.nlizzard.horizonhub.entity.pojo.UserIntegralRecord;
-import com.nlizzard.horizonhub.entity.pojo.UserMessage;
+import com.nlizzard.horizonhub.entity.pojo.*;
+import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
+import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
 import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.entity.query.UserIntegralRecordQuery;
 import com.nlizzard.horizonhub.entity.query.basequery.SimplePage;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
+import com.nlizzard.horizonhub.mappers.ForumArticleMapper;
+import com.nlizzard.horizonhub.mappers.ForumCommentMapper;
 import com.nlizzard.horizonhub.mappers.UserInfoMapper;
 import com.nlizzard.horizonhub.mappers.UserIntegralRecordMapper;
 import com.nlizzard.horizonhub.service.EmailCodeService;
@@ -64,6 +66,13 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private FileUtils fileUtils;
+
+    @Resource
+    private ForumArticleMapper<ForumArticle, ForumArticleQuery> forumArticleMapper;
+
+    @Resource
+    private ForumCommentMapper<ForumComment, ForumCommentQuery> forumCommentMapper;
+
 
     /**
      * 根据条件查询列表
@@ -370,6 +379,67 @@ public class UserInfoServiceImpl implements UserInfoService {
         userInfoMapper.updateByUserId(userInfo, userInfo.getUserId());
         if (avatar != null) {
             fileUtils.uploadFile2Local(avatar, FileUploadTypeEnum.AVATAR, userInfo.getUserId());
+        }
+    }
+
+    /**
+     * 更新用户状态
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserStatus(Integer status, String userId) {
+        UserStatusEnum userStatusEnum = UserStatusEnum.getUserStatusEnumByStatus(status);
+        if (userStatusEnum == null) {
+            throw new BusinessException("状态参数错误");
+        }
+
+        if (UserStatusEnum.DISABLE.getStatus().equals(status)) {
+            // 删除用户全部文章和评论
+            forumArticleMapper.updateStatusBatchByUserId(status, userId);
+            forumCommentMapper.updateStatusBatchByUserId(status, userId);
+
+            //同时需要更新文章的评论数
+            ForumCommentQuery forumCommentQuery = new ForumCommentQuery();
+            forumCommentQuery.setStatus(1);
+            forumCommentQuery.setPCommentId(0);
+            forumCommentQuery.setUserId(userId);
+            List<ForumComment> forumComments = forumCommentMapper.selectList(forumCommentQuery);
+            if (!forumComments.isEmpty()) {
+                // 获得文章ID列表
+                List<String> idList = forumComments.stream().map(ForumComment::getArticleId).toList();
+                // 更新文章评论数
+                forumArticleMapper.resetCommentCount(idList);
+            }
+        }
+        userInfoMapper.updateUserStatusById(status, userId);
+    }
+
+    /**
+     * 发送消息
+     *
+     * @param userId   接收消息的用户ID
+     * @param message  消息内容
+     * @param integral 积分
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void sendMessage(String userId, String message, Integer integral) {
+        UserMessage userMessage = new UserMessage();
+        userMessage.setReceivedUserId(userId);
+        userMessage.setMessageType(MessageTypeEnum.SYS.getType());
+        userMessage.setCreateTime(new Date());
+        userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
+        userMessage.setMessageContent(message);
+        userMessageService.add(userMessage);
+
+        UserIntegralChangeTypeEnum changeTypeEnum = UserIntegralChangeTypeEnum.ADD;
+        if (integral != null && integral != 0) {
+            //扣减积分传入正数
+            if (integral < 0) {
+                integral = integral * -1;
+                changeTypeEnum = UserIntegralChangeTypeEnum.REDUCE;
+            }
+            updateUserIntegral(userId, UserIntegralOperTypeEnum.ADMIN, changeTypeEnum.getChangeType(), integral);
         }
     }
 }

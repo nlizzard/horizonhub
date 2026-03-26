@@ -1,25 +1,31 @@
 package com.nlizzard.horizonhub.entity.dto;
 
 
+import com.nlizzard.horizonhub.annotation.VerifyParam;
+
 public class SysSetting4PostDto {
     /**
      * 发帖积分
      */
+    @VerifyParam(required = true)
     private Integer postIntegral;
 
     /**
      * 一天发帖数量
      */
+    @VerifyParam(required = true)
     private Integer postDayCountThreshold;
 
     /**
      * 每天上传图片数量
      */
+    @VerifyParam(required = true)
     private Integer dayImageUploadCount;
 
     /**
      * 附件大小 单位 mb
      */
+    @VerifyParam(required = true)
     private Integer attachmentSize;
 
     public Integer getPostIntegral() {

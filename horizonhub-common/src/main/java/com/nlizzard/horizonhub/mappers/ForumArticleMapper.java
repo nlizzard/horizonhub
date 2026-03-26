@@ -44,7 +44,12 @@ public interface ForumArticleMapper<T, P> extends BaseMapper<T, P> {
     /**
      * 批量重置文章的评论数
      *
-     * @param articleIdIds 文章ID列表
+     * @param articleIds 文章ID列表
      */
-    void resetCommentCount(@Param("articleIdIds") List<String> articleIdIds);
+    void resetCommentCount(@Param("articleIds") List<String> articleIds);
+
+    /**
+     * 根据UserId，批量更新文章状态
+     */
+    void updateStatusBatchByUserId(@Param("status") Integer status, @Param("userId") String userId);
 }

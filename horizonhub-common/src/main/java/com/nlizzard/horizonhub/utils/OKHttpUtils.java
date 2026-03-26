@@ -27,9 +27,19 @@ public class OKHttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(OKHttpUtils.class);
 
     private static OkHttpClient.Builder getClientBuilder() {
-        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder().followRedirects(false).addInterceptor(new RedirectInterceptor()).retryOnConnectionFailure(false);
-        clientBuilder.connectTimeout(TIME_OUT_SECONDS, TimeUnit.SECONDS).readTimeout(TIME_OUT_SECONDS, TimeUnit.SECONDS);
-        clientBuilder.sslSocketFactory(createSSLSocketFactory()).hostnameVerifier((hostname, session) -> true);
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
+                .followRedirects(false)
+                .addInterceptor(new RedirectInterceptor())
+                .retryOnConnectionFailure(false);
+
+        clientBuilder.connectTimeout(TIME_OUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(TIME_OUT_SECONDS, TimeUnit.SECONDS);
+
+        // JDK 9+ 必须同时传入 SSLSocketFactory 和 X509TrustManager
+        X509TrustManager trustManager = new TrustAllCerts();
+        clientBuilder.sslSocketFactory(createSSLSocketFactory(trustManager), trustManager);
+        clientBuilder.hostnameVerifier((hostname, session) -> true);
+
         return clientBuilder;
     }
 
@@ -38,12 +48,7 @@ public class OKHttpUtils {
         if (null != header) {
             for (Map.Entry<String, String> map : header.entrySet()) {
                 String key = map.getKey();
-                String value;
-                if (map.getValue() == null) {
-                    value = "";
-                } else {
-                    value = map.getValue();
-                }
+                String value = (map.getValue() == null) ? "" : map.getValue();
                 requestBuilder.addHeader(key, value);
             }
         }
@@ -57,12 +62,7 @@ public class OKHttpUtils {
         }
         for (Map.Entry<String, String> map : params.entrySet()) {
             String key = map.getKey();
-            String value;
-            if (map.getValue() == null) {
-                value = "";
-            } else {
-                value = map.getValue();
-            }
+            String value = (map.getValue() == null) ? "" : map.getValue();
             builder.add(key, value);
         }
         return builder;
@@ -77,9 +77,9 @@ public class OKHttpUtils {
             Request request = requestBuilder.url(url).build();
             Response response = client.newCall(request).execute();
             responseBody = response.body();
-            return responseBody.string();
+            return responseBody != null ? responseBody.string() : null;
         } catch (SocketTimeoutException | ConnectException e) {
-            logger.error("OKhttp POST 请求超时,url:{}", url, e);
+            logger.error("OKhttp GET 请求超时,url:{}", url, e);
             throw new BusinessException(ResponseCodeEnum.CODE_900);
         } catch (Exception e) {
             logger.error("OKhttp GET 请求异常", e);
@@ -102,8 +102,7 @@ public class OKHttpUtils {
             Request request = requestBuilder.url(url).post(requestBody).build();
             Response response = client.newCall(request).execute();
             responseBody = response.body();
-            String responseStr = responseBody.string();
-            return responseStr;
+            return responseBody != null ? responseBody.string() : null;
         } catch (SocketTimeoutException | ConnectException e) {
             logger.error("OKhttp POST 请求超时,url:{}", url, e);
             throw new BusinessException(ResponseCodeEnum.CODE_900);
@@ -117,19 +116,16 @@ public class OKHttpUtils {
         }
     }
 
-    private static SSLSocketFactory createSSLSocketFactory() {
-        SSLSocketFactory ssfFactory = null;
+    private static SSLSocketFactory createSSLSocketFactory(X509TrustManager trustManager) {
         try {
-            SSLContext sc = SSLContext.getInstance("TLSv1.2");
-            sc.init(null, new TrustManager[]{new TrustAllCerts()}, new SecureRandom());
-            ssfFactory = sc.getSocketFactory();
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, new TrustManager[]{trustManager}, new SecureRandom());
+            return sc.getSocketFactory();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("创建 SSLSocketFactory 失败", e);
+            return null;
         }
-
-        return ssfFactory;
     }
-
 }
 
 class TrustAllCerts implements X509TrustManager {
@@ -148,8 +144,7 @@ class TrustAllCerts implements X509TrustManager {
 }
 
 class RedirectInterceptor implements Interceptor {
-
-    private static Logger logger = LoggerFactory.getLogger(RedirectInterceptor.class);
+    private static final Logger logger = LoggerFactory.getLogger(RedirectInterceptor.class);
 
     @Override
     public Response intercept(Chain chain) throws IOException {
@@ -157,12 +152,13 @@ class RedirectInterceptor implements Interceptor {
         Response response = chain.proceed(request);
         int code = response.code();
         if (code == 307 || code == 301 || code == 302) {
-            //获取重定向的地址
             String location = response.headers().get("Location");
             logger.info("重定向地址,location:{}", location);
-            //重新构建请求
-            Request newRequest = request.newBuilder().url(location).build();
-            response = chain.proceed(newRequest);
+            if (location != null) {
+                Request newRequest = request.newBuilder().url(location).build();
+                response.close(); // 记得关闭上一个 response
+                return chain.proceed(newRequest);
+            }
         }
         return response;
     }

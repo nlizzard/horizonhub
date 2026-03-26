@@ -715,8 +715,15 @@
         set f.comment_count = (select count(1) from forum_comment c where c.status =1 and c.p_comment_id = 0 and
         c.article_id =f.article_id )
         where article_id in
-        <foreach collection="articleIdIds" separator="," item="item" open="(" close="）">
+        <foreach collection="articleIds" separator="," item="item" open="(" close=")">
             #{item}
         </foreach>
+    </update>
+
+    <!--根据用户ID批量更新文章状态-->
+    <update id="updateStatusBatchByUserId">
+        update forum_article
+        set status = #{status}
+        where user_id = #{userId}
     </update>
 </mapper>

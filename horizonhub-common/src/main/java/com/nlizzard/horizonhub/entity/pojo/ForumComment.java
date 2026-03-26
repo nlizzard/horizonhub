@@ -1,7 +1,6 @@
 package com.nlizzard.horizonhub.entity.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
 import com.nlizzard.horizonhub.utils.DateUtils;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -86,7 +85,6 @@ public class ForumComment implements Serializable {
     /**
      * 0:待审核  1:已审核
      */
-    @JsonIgnore
     private Integer status;
 
     /**

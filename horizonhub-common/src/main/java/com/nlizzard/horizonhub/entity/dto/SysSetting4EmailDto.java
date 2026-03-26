@@ -1,12 +1,16 @@
 package com.nlizzard.horizonhub.entity.dto;
 
 
+import com.nlizzard.horizonhub.annotation.VerifyParam;
+
 public class SysSetting4EmailDto {
 
     //邮件标题
+    @VerifyParam(required = true)
     private String emailTitle;
 
     //邮件内容
+    @VerifyParam(required = true)
     private String emailContent;
 
     public String getEmailTitle() {

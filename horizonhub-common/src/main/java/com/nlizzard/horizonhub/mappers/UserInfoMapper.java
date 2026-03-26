@@ -59,4 +59,9 @@ public interface UserInfoMapper<T, P> extends BaseMapper<T, P> {
      * 根据UserId更新积分
      */
     Integer updateIntegral(@Param("userId") String userId, @Param("integral") Integer integral);
+
+    /**
+     * 根据UserId更新状态
+     */
+    void updateUserStatusById(@Param("status") Integer status, @Param("userId") String userId);
 }

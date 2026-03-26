@@ -64,4 +64,10 @@ public interface SysSettingService {
      */
     SysSettingDto initSysSettingToCache();
 
+    /**
+     * 更新系统设置  将新的系统设置保存到数据库中  同时更新内存中的系统设置  以便后续使用
+     *
+     * @param sysSettingDto 系统设置信息
+     */
+    void updateSetting(SysSettingDto sysSettingDto);
 }

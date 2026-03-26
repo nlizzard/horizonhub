@@ -33,4 +33,12 @@ public interface ForumCommentMapper<T, P> extends BaseMapper<T, P> {
      * @param commentId 评论ID
      */
     void updateCommentCount(@Param("count") Integer count, @Param("commentId") Integer commentId);
+
+    /**
+     * 根据用户Id更新评论
+     *
+     * @param status 评论状态
+     * @param userId 用户Id
+     */
+    void updateStatusBatchByUserId(@Param("status") Integer status, @Param("userId") String userId);
 }

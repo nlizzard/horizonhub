@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
@@ -154,6 +155,32 @@ public class SysSettingServiceImpl implements SysSettingService {
             throw new BusinessException("系统设置写入内存失败");
         } finally {
             logger.info("web后端系统准备就绪 :)");
+        }
+    }
+
+    /**
+     * 更新系统设置  将新的系统设置保存到数据库中
+     *
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateSetting(SysSettingDto sysSettingDto) {
+        SysSetting sysSetting = new SysSetting();
+        // 遍历字段，拿到read方法，拿到code，read读出来转json字符串
+        for (SysSettingCodeEnum settingCodeEnum : SysSettingCodeEnum.values()) {
+            try {
+                PropertyDescriptor propertyDescriptor = new PropertyDescriptor(settingCodeEnum.getPropName(), SysSettingDto.class);
+                Method readMethod = propertyDescriptor.getReadMethod();
+                String setting = JsonUtils.object2Json(readMethod.invoke(sysSettingDto));
+                String code = settingCodeEnum.getCode();
+                //执行更新操作
+                sysSetting.setJsonContent(setting);
+                sysSettingMapper.updateByCode(sysSetting, code);
+                initSysSettingToCache();
+            } catch (Exception e) {
+                logger.error("更新系统设置报错:", e);
+                throw new BusinessException("更新系统设置失败");
+            }
         }
     }
 }

@@ -1,19 +1,24 @@
 package com.nlizzard.horizonhub.entity.dto;
 
+import com.nlizzard.horizonhub.annotation.VerifyParam;
+
 public class SysSetting4CommentDto {
     /**
      * 评论积分
      */
+    @VerifyParam(required = true)
     private Integer commentIntegral;
 
     /**
      * 评论数量阈值
      */
+    @VerifyParam(required = true)
     private Integer commentDayCountThreshold;
 
     /**
      * 是否开启评论
      */
+    @VerifyParam(required = true)
     private Boolean commentOpen;
 
     public Boolean getCommentOpen() {

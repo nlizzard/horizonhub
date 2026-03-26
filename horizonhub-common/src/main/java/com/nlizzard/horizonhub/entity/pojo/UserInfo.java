@@ -1,7 +1,6 @@
 package com.nlizzard.horizonhub.entity.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
 import com.nlizzard.horizonhub.utils.DateUtils;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -82,7 +81,6 @@ public class UserInfo implements Serializable {
     /**
      * 0:禁用 1:正常
      */
-    @JsonIgnore
     private Integer status;
 
     public void setUserId(String userId) {

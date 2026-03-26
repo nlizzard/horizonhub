@@ -485,4 +485,11 @@
         set good_count = good_count + #{count}
         where comment_id = #{commentId}
     </update>
+
+    <!--根据用户ID批量更新评论状态-->
+    <update id="updateStatusBatchByUserId">
+        update forum_comment
+        set status = #{status}
+        where user_id = #{userId}
+    </update>
 </mapper>

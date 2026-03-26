@@ -17,6 +17,9 @@ public class AdminConfig extends AppConfig {
     @Value("${admin.password:}")
     private String adminPassword;
 
+    /**
+     * 内部刷新内存设置接口
+     */
     @Value("${inner.api.url:}")
     private String webApiUrl;
 

@@ -13,6 +13,15 @@ public enum UserStatusEnum {
         this.status = status;
     }
 
+    public static UserStatusEnum getUserStatusEnumByStatus(Integer status) {
+        for (UserStatusEnum userStatusEnum : UserStatusEnum.values()) {
+            if (userStatusEnum.getStatus().equals(status)) {
+                return userStatusEnum;
+            }
+        }
+        return null;
+    }
+
     public Integer getStatus() {
         return status;
     }

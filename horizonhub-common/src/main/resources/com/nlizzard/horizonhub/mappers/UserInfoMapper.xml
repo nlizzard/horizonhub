@@ -566,4 +566,11 @@
         where user_id = #{userId}
         <![CDATA[ and current_integral + #{integral} >= 0]]>
     </update>
+
+    <!--根据Id更新用户状态-->
+    <update id="updateUserStatusById">
+        update user_info
+        set status = #{status}
+        where user_id = #{userId}
+    </update>
 </mapper>
