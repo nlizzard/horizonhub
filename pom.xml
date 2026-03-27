@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.7</version>
+        <version>3.5.12</version>
     </parent>
 
     <groupId>com.nlizzard</groupId>
@@ -28,11 +28,11 @@
         <logback.version>1.5.25</logback.version>
         <spring-boot.version>3.5.12</spring-boot.version>
         <mybatis.version>3.0.5</mybatis.version>
-        <mysql.version>8.3.0</mysql.version>
+        <mysql.version>9.6.0</mysql.version>
         <aspectjweaver.version>1.9.24</aspectjweaver.version>
         <okhttp3.version>4.12.0</okhttp3.version>
         <jackson.version>2.18.6</jackson.version>
-        <commons.lang3.version>3.14.0</commons.lang3.version>
+        <commons.lang3.version>3.18.0</commons.lang3.version>
         <commons.codec.version>1.16.1</commons.codec.version>
         <commons.io.version>2.14.0</commons.io.version>
         <tomcat.version>10.1.52</tomcat.version>

@@ -46,6 +46,8 @@ spring:
     port: 465
     password: xxxx
     default-encoding: UTF-8
+  freemarker:
+    check-template-location: false
 # 是否使用邮箱验证码，false，验证码打印在控制台，true，发送邮件
 send:
   mail:
@@ -72,4 +74,4 @@ inner:
     appSecret: horizonHub_key
 log:
   root:
-    level: debug
+    level: INFO
