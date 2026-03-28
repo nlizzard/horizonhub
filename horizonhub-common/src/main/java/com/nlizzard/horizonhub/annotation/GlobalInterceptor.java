@@ -31,5 +31,4 @@ public @interface GlobalInterceptor {
      */
     UserOperFrequencyTypeEnum frequencyType() default UserOperFrequencyTypeEnum.NO_CHECK;
 
-    // TODO 频率校验
 }

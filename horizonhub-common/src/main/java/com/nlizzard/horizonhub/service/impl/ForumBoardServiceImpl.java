@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @Description:文章板块信息ServiceImpl
@@ -129,16 +131,30 @@ public class ForumBoardServiceImpl implements ForumBoardService {
         return convertLine2Tree(forumBoardList, 0);
     }
 
-    // 递归算法，将线性结构转换为树形结构  TODO:后续可以优化为非递归算法，减少递归调用的性能开销
-    private List<ForumBoard> convertLine2Tree(List<ForumBoard> forumBoardList, Integer pBoardId) {
-        List<ForumBoard> treeList = new ArrayList<>();
-        for (ForumBoard forumBoard : forumBoardList) {
-            if (forumBoard.getPBoardId().equals(pBoardId)) {
-                forumBoard.setChildren(convertLine2Tree(forumBoardList, forumBoard.getBoardId()));
-                treeList.add(forumBoard);
+    // 原来递归时间复杂度O(n^2) 改良后时间复杂度O(n)
+    private List<ForumBoard> convertLine2Tree(List<ForumBoard> forumBoardList, Integer rootId) {
+        List<ForumBoard> tree = new ArrayList<>();
+        // 建立 ID 与 对象的映射索引，利用引用传递
+        Map<Integer, ForumBoard> map = forumBoardList.stream()
+                .collect(Collectors.toMap(ForumBoard::getBoardId, node -> node));
+
+        for (ForumBoard node : forumBoardList) {
+            Integer pId = node.getPBoardId();
+            if (pId.equals(rootId)) {
+                // 如果是根节点，放入结果集
+                tree.add(node);
+            } else {
+                // 如果不是根节点，直接通过索引找到父节点并挂载
+                ForumBoard parent = map.get(pId);
+                if (parent != null) {
+                    if (parent.getChildren() == null) {
+                        parent.setChildren(new ArrayList<>());
+                    }
+                    parent.getChildren().add(node);
+                }
             }
         }
-        return treeList;
+        return tree;
     }
 
 
