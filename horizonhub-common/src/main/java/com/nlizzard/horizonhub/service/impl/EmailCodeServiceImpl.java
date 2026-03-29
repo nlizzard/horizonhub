@@ -153,7 +153,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
             //邮件主题
             helper.setSubject(emailDto.getEmailTitle());
             //邮件内容
-            helper.setText(String.format(emailDto.getEmailContent(), code));
+            helper.setText(emailDto.getEmailContent().replace("${code}", code), true);
             //邮件发送时间
             helper.setSentDate(new Date());
             javaMailSender.send(message);

@@ -572,8 +572,8 @@ mvn clean package
 
 ## 联系方式
 
-- 项目地址：https://github.com/yourusername/horizonhub
-- 问题反馈：https://github.com/yourusername/horizonhub/issues
+- 项目地址：https://github.com/nlizzard/horizonhub
+- 问题反馈：https://github.com/nlizzard/horizonhub/issues
 
 ## 致谢
 
