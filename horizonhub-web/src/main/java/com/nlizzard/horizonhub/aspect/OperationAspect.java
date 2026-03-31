@@ -1,7 +1,6 @@
 package com.nlizzard.horizonhub.aspect;
 
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.util.IdUtil;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.constants.Constants;
@@ -12,12 +11,9 @@ import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
 import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.entity.enums.UserOperFrequencyTypeEnum;
-import com.nlizzard.horizonhub.entity.enums.UserStatusEnum;
-import com.nlizzard.horizonhub.entity.pojo.UserInfo;
 import com.nlizzard.horizonhub.entity.query.ForumArticleQuery;
 import com.nlizzard.horizonhub.entity.query.ForumCommentQuery;
 import com.nlizzard.horizonhub.entity.query.LikeRecordQuery;
-import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.ForumArticleService;
@@ -47,7 +43,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Date;
-import java.util.List;
 
 @Component
 @Aspect
@@ -97,10 +92,6 @@ public class OperationAspect {
             Method method = target.getClass().getMethod(methodName, parameterTypes);
             // 获取方法上的 @GlobalInterceptor 注解
             GlobalInterceptor interceptor = method.getAnnotation(GlobalInterceptor.class);
-            // 校验登录
-            if (interceptor.checkLogin()) {
-                checkLogin();
-            }
             // 校验参数
             if (interceptor.checkParams()) {
                 validateParams(method, arguments);
@@ -203,54 +194,6 @@ public class OperationAspect {
         String sessionKey = Constants.SESSION_KEY_FREQUENCY + curDate + typeEnum;
         Integer count = (Integer) session.getAttribute(sessionKey);
         session.setAttribute(sessionKey, count + 1);
-    }
-
-
-    /**
-     * 校验登录
-     */
-    private void checkLogin() {
-        // 拿到当前请求的session，获取用户信息，如果没有用户信息，则抛出异常
-        // 1. 获取 RequestAttributes
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        // 2. 检查 attributes 是否为空（防止在非 Web 线程调用）
-        if (attributes == null) {
-            throw new BusinessException(ResponseCodeEnum.CODE_404.getCode(), "系统异常：非 Web 请求环境");
-        }
-        HttpServletRequest request = attributes.getRequest();
-        HttpSession session = request.getSession();
-        SessionWebUserDto sessionUser = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
-        // 如果配置文件写明是开发环境，则所有接口不校验是否已登录
-        if (sessionUser == null && appConfig.getIsDev()) {
-            // 查询是否已有用于开发环境的测试账号
-            UserInfoQuery userInfoQuery = new UserInfoQuery();
-            userInfoQuery.setEmail(appConfig.getDevTestEmail());
-            List<UserInfo> userInfoList = userInfoService.findListByParam(userInfoQuery);
-            UserInfo testUser = new UserInfo();
-            if (userInfoList == null) {
-                // 没有则生成测试用户
-                testUser.setCurrentIntegral(10000);
-                testUser.setUserId(IdUtil.getSnowflakeNextIdStr());
-                testUser.setEmail(appConfig.getDevTestEmail());
-                testUser.setStatus(UserStatusEnum.ENABLE.getStatus());
-                testUser.setNickName("test");
-                userInfoService.add(testUser);
-            } else {
-                testUser = userInfoList.get(0);
-            }
-            sessionUser = new SessionWebUserDto();
-            sessionUser.setUserId(testUser.getUserId());
-            sessionUser.setNickName(testUser.getNickName());
-            sessionUser.setProvince("中国");
-            sessionUser.setAdmin(true);
-            session.setAttribute(Constants.SESSION_KEY, sessionUser);
-
-
-        }
-        // 如果session中没有用户信息，则抛出未登录业务异常
-        if (null == sessionUser) {
-            throw new BusinessException(ResponseCodeEnum.CODE_901);
-        }
     }
 
     /**
