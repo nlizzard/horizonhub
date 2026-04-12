@@ -75,6 +75,9 @@ public class ForumArticleServiceImpl implements ForumArticleService {
     @Resource
     private UserMessageService userMessageService;
 
+    @Resource
+    private SysCacheUtils sysCacheUtils;
+
     /**
      * 根据条件查询列表
      */
@@ -206,7 +209,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         if (isAdmin) {
             article.setStatus(ArticleStatusEnum.AUDIT.getStatus());
         } else {
-            SysSetting4AuditDto auditDto = SysCacheUtils.getSysSetting().getAuditSetting();
+            SysSetting4AuditDto auditDto = sysCacheUtils.getSysSetting().getAuditSetting();
             article.setStatus(auditDto.getPostAudit() ? ArticleStatusEnum.NO_AUDIT.getStatus() :
                     ArticleStatusEnum.AUDIT.getStatus());
         }
@@ -230,7 +233,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         this.forumArticleMapper.insert(article);
 
         //增加积分
-        Integer postIntegral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
+        Integer postIntegral = sysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
         if (postIntegral > 0 && ArticleStatusEnum.AUDIT.getStatus().equals(article.getStatus())) {
             this.userInfoService.updateUserIntegral(article.getUserId(),
                     UserIntegralOperTypeEnum.POST_COMMENT, UserIntegralChangeTypeEnum.ADD.getChangeType(), postIntegral);
@@ -291,7 +294,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
      */
     public void uploadAttachment(ForumArticle article, ForumArticleAttachment attachment, MultipartFile file, Boolean isUpdate) {
         // 查询系统设置的附件大小限制，单位MB，转换成字节
-        Integer allowSizeMb = SysCacheUtils.getSysSetting().getPostSetting().getAttachmentSize();
+        Integer allowSizeMb = sysCacheUtils.getSysSetting().getPostSetting().getAttachmentSize();
         long allowSize = (long) allowSizeMb * Constants.FILE_SIZE_1M;
         if (file.getSize() > allowSize) {
             throw new BusinessException("附件最大只能" + allowSizeMb + "MB");
@@ -388,7 +391,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         if (isAdmin) {
             article.setStatus(ArticleStatusEnum.AUDIT.getStatus());
         } else {
-            SysSetting4AuditDto auditDto = SysCacheUtils.getSysSetting().getAuditSetting();
+            SysSetting4AuditDto auditDto = sysCacheUtils.getSysSetting().getAuditSetting();
             article.setStatus(auditDto.getPostAudit() ? ArticleStatusEnum.NO_AUDIT.getStatus() :
                     ArticleStatusEnum.AUDIT.getStatus());
         }
@@ -458,7 +461,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         forumArticleMapper.updateByArticleId(updateInfo, articleId);
 
         // 没收发帖积分
-        Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
+        Integer integral = sysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
         if (integral > 0 && ArticleStatusEnum.AUDIT.getStatus().equals(article.getStatus())) {
             userInfoService.updateUserIntegral(article.getUserId(), UserIntegralOperTypeEnum.DEL_ARTICLE, UserIntegralChangeTypeEnum.REDUCE.getChangeType(),
                     integral);
@@ -502,7 +505,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
         updateInfo.setStatus(ArticleStatusEnum.AUDIT.getStatus());
         forumArticleMapper.updateByArticleId(updateInfo, articleId);
         // 发帖积分发放
-        Integer integral = SysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
+        Integer integral = sysCacheUtils.getSysSetting().getPostSetting().getPostIntegral();
         if (integral > 0) {
             userInfoService.updateUserIntegral(article.getUserId(), UserIntegralOperTypeEnum.POST_ARTICLE, UserIntegralChangeTypeEnum.ADD.getChangeType(),
                     integral);

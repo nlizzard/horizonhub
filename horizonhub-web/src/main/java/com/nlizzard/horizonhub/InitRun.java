@@ -15,7 +15,7 @@ public class InitRun implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        // 系统启动读系统配置到内存中
+        // 系统启动读系统配置到redis中（预热）
         sysSettingService.initSysSettingToCache();
     }
 }

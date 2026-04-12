@@ -38,13 +38,13 @@ public class AccountController extends BaseController {
     @Resource
     private UserInfoService userInfoService;
 
+    @Resource
+    private SysCacheUtils sysCacheUtils;
+
     /**
      * 生成图片验证码
      *
-     * @param response
-     * @param session
-     * @param type     0：登录注册图片验证码，1：发送邮件图片验证码
-     * @throws IOException
+     * @param type 0：登录注册图片验证码，1：发送邮件图片验证码
      */
     @RequestMapping(value = "/checkCode")
     public void checkCode(HttpServletResponse response,
@@ -71,11 +71,9 @@ public class AccountController extends BaseController {
     /**
      * 发送邮箱验证码
      *
-     * @param session
      * @param email     接收验证码的邮箱地址
      * @param checkCode 图片验证码
      * @param type      0-注册验证码，1-找回密码验证码
-     * @return
      */
     @RequestMapping("/sendEmailCode")
     @GlobalInterceptor(checkParams = true)
@@ -97,13 +95,11 @@ public class AccountController extends BaseController {
     /**
      * 注册账号接口
      *
-     * @param session
      * @param email     邮箱
      * @param nickName  昵称
      * @param password  密码
      * @param checkCode 图片验证码
      * @param emailCode 邮箱验证码
-     * @return
      */
     @RequestMapping("/register")
     @GlobalInterceptor(checkParams = true)
@@ -127,12 +123,9 @@ public class AccountController extends BaseController {
     /**
      * 登录接口
      *
-     * @param session
-     * @param request
      * @param email     邮箱
      * @param password  密码(md5加密后的密码)
      * @param checkCode 图片验证码
-     * @return
      */
     @RequestMapping("/login")
     @GlobalInterceptor(checkParams = true)
@@ -156,9 +149,6 @@ public class AccountController extends BaseController {
 
     /**
      * 获取当前登录用户信息接口
-     *
-     * @param session
-     * @return
      */
     @RequestMapping("/getUserInfo")
     @GlobalInterceptor(checkLogin = true)
@@ -170,9 +160,6 @@ public class AccountController extends BaseController {
 
     /**
      * 退出登录接口
-     *
-     * @param session
-     * @return
      */
     @RequestMapping("/logout")
     @GlobalInterceptor(checkLogin = true)
@@ -183,12 +170,10 @@ public class AccountController extends BaseController {
 
     /**
      * 获取系统设置接口
-     *
-     * @return
      */
     @RequestMapping("/getSysSetting")
     public ResponseVO<Map<String, Object>> getSysSetting() {
-        SysSettingDto sysSettingDto = SysCacheUtils.getSysSetting();
+        SysSettingDto sysSettingDto = sysCacheUtils.getSysSetting();
         Map<String, Object> sysSettingMap = new HashMap<>();
         // 评论设置
         SysSetting4CommentDto commentSetting = sysSettingDto.getCommentSetting();
@@ -199,12 +184,11 @@ public class AccountController extends BaseController {
     /**
      * 重置密码接口
      *
-     * @param session
+     * @param session   session
      * @param email     邮箱
      * @param password  新密码（原始密码）
      * @param checkCode 图片验证码
      * @param emailCode 邮箱验证码
-     * @return
      */
     @RequestMapping("/resetPwd")
     @GlobalInterceptor(checkParams = true, checkLogin = true)

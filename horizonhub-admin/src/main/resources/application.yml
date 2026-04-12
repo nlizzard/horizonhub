@@ -48,6 +48,13 @@ spring:
     default-encoding: UTF-8
   freemarker:
     check-template-location: false
+  data:
+    redis:
+      host: 192.168.123.2
+      port: 6379
+      username:
+      password:
+      database: 0
 # 是否使用邮箱验证码，false，验证码打印在控制台，true，发送邮件
 send:
   mail:
@@ -70,13 +77,6 @@ isDev:
   testUserEmail: test_123456@test.com
 # 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
 projectFolder: E:/project/horizonhub
-#内部接口相关
-inner:
-  api:
-    url: http://localhost:8080/api/innerApi/refreshSysSetting
-    appKey: horizonHub
-    appSecret: horizonHub_key
 log:
-  path:
   root:
     level: INFO

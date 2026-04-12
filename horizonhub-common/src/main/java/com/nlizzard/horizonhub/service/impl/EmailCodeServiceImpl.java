@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service.impl;
 
+import cn.hutool.core.util.RandomUtil;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SysSetting4EmailDto;
@@ -18,7 +19,6 @@ import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
 import jakarta.mail.internet.MimeMessage;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -50,6 +50,9 @@ public class EmailCodeServiceImpl implements EmailCodeService {
 
     @Resource
     private WebConfig webConfig;
+
+    @Resource
+    private SysCacheUtils sysCacheUtils;
 
     /**
      * 根据条件查询列表
@@ -149,7 +152,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
             helper.setFrom(webConfig.getSendUserName());
             //邮件收件人
             helper.setTo(toEmail);
-            SysSetting4EmailDto emailDto = SysCacheUtils.getSysSetting().getEmailSetting();
+            SysSetting4EmailDto emailDto = sysCacheUtils.getSysSetting().getEmailSetting();
             //邮件主题
             helper.setSubject(emailDto.getEmailTitle());
             //邮件内容
@@ -180,7 +183,7 @@ public class EmailCodeServiceImpl implements EmailCodeService {
             }
         }
         // 生成随机验证码
-        String code = RandomStringUtils.random(Constants.EMAIL_CODE_LENGTH, true, true);
+        String code = RandomUtil.randomString(Constants.EMAIL_CODE_LENGTH);
         // 是否使用邮箱发送邮件
         if (webConfig.getIsSendEmailCode() != null && webConfig.getIsSendEmailCode()) {
             // 调用重载方法发送验证码

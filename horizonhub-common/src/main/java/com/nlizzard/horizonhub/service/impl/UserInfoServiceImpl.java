@@ -73,6 +73,8 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Resource
     private ForumCommentMapper<ForumComment, ForumCommentQuery> forumCommentMapper;
 
+    @Resource
+    private SysCacheUtils sysCacheUtils;
 
     /**
      * 根据条件查询列表
@@ -208,10 +210,6 @@ public class UserInfoServiceImpl implements UserInfoService {
     /**
      * 注册账号接口
      *
-     * @param email
-     * @param nickName
-     * @param password
-     * @param emailCode
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -252,7 +250,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         userMessage.setCreateTime(new Date());
         userMessage.setStatus(MessageStatusEnum.NO_READ.getStatus());
         // 系统设置中读取注册欢迎信息
-        userMessage.setMessageContent(SysCacheUtils.getSysSetting().getRegisterSetting().getRegisterWelcomeInfo());
+        userMessage.setMessageContent(sysCacheUtils.getSysSetting().getRegisterSetting().getRegisterWelcomeInfo());
         userMessageService.add(userMessage);
 
     }
@@ -300,7 +298,6 @@ public class UserInfoServiceImpl implements UserInfoService {
      * @param email     邮箱
      * @param password  密码
      * @param ipAddress 登录 IP 地址
-     * @return
      */
     @Override
     public SessionWebUserDto login(String email, String password, String ipAddress) {

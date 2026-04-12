@@ -1,5 +1,6 @@
 package com.nlizzard.horizonhub.service.impl;
 
+
 import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
 import com.nlizzard.horizonhub.entity.enums.PageSize;
 import com.nlizzard.horizonhub.entity.enums.SysSettingCodeEnum;
@@ -35,6 +36,9 @@ public class SysSettingServiceImpl implements SysSettingService {
 
     @Resource
     private SysSettingMapper<SysSetting, SysSettingQuery> sysSettingMapper;
+
+    @Resource
+    private SysCacheUtils sysCacheUtils;
 
     /**
      * 根据条件查询列表
@@ -147,12 +151,12 @@ public class SysSettingServiceImpl implements SysSettingService {
                 Object o = JsonUtils.json2Object(jsonContent, Class.forName(sysSettingCodeEnum.getClassZ()));
                 writeMethod.invoke(sysSettingDto, o);
             }
-            SysCacheUtils.setSysSettingMap(sysSettingDto);
-            logger.info("系统设置写入内存成功");
+            sysCacheUtils.setSysSettingMap(sysSettingDto);
+            logger.info("系统设置写入redis成功");
             return sysSettingDto;
         } catch (Exception e) {
-            logger.error("系统设置写入内存失败", e);
-            throw new BusinessException("系统设置写入内存失败");
+            logger.error("系统设置写入redis失败", e);
+            throw new BusinessException("系统设置写入redis失败");
         } finally {
             logger.info("web后端系统准备就绪 :)");
         }
@@ -176,11 +180,12 @@ public class SysSettingServiceImpl implements SysSettingService {
                 //执行更新操作
                 sysSetting.setJsonContent(setting);
                 sysSettingMapper.updateByCode(sysSetting, code);
-                initSysSettingToCache();
             } catch (Exception e) {
                 logger.error("更新系统设置报错:", e);
                 throw new BusinessException("更新系统设置失败");
             }
         }
+        // 删除redis缓存
+        sysCacheUtils.deleteSysSettingInRedis();
     }
 }

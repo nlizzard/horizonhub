@@ -18,8 +18,10 @@ public class Constants {
     public static final String CHECK_CODE_KEY_EMAIL = "check_code_email";
     // 用户 ID 长度
     public static final Integer USER_ID_LENGTH = 19;
-    // 内存中系统设置的key，用concurrentHashMap存储
-    public static final String SYS_SETTING_KEY = "sys_setting";
+    // redis中系统设置的key
+    public static final String SYS_SETTING_KEY = "horizonHub:sys_setting";
+    // redis中系统设置的过期时间(分钟)
+    public static final Integer SYS_SETTING_KEY_EXPIRE = 10;
     // session 中用户信息的 key
     public static final String SESSION_KEY = "session_key";
     // ip 省份默认未知
@@ -44,6 +46,6 @@ public class Constants {
     public static final Integer FILE_SIZE_1M = 1024 * 1024;
     // 成功响应的状态信息
     public static final String STATUS_SUCCESS = "success";
-    // 频率计数在Session中的前缀key
-    public static final String SESSION_KEY_FREQUENCY = "session_key_frequence";
+    // 频率计数的前缀key
+    public static final String FREQUENCY_KEY = "horizonHub:frequency_key";
 }

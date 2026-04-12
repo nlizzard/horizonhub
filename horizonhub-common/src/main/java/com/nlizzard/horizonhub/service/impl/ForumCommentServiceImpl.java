@@ -58,6 +58,9 @@ public class ForumCommentServiceImpl implements ForumCommentService {
     @Resource
     private ForumCommentService forumCommentService;
 
+    @Resource
+    private SysCacheUtils sysCacheUtils;
+
     /**
      * 根据条件查询列表
      */
@@ -235,7 +238,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
         }
 
         // 是否开启评论审核
-        Boolean needAudit = SysCacheUtils.getSysSetting().getAuditSetting().getCommentAudit();
+        Boolean needAudit = sysCacheUtils.getSysSetting().getAuditSetting().getCommentAudit();
 
         //设置状态
         comment.setStatus(needAudit ? CommentStatusEnum.NO_AUDIT.getStatus() : CommentStatusEnum.AUDIT.getStatus());
@@ -257,7 +260,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
      */
     public void updateCommentInfo(ForumComment comment, ForumArticle forumArticle, ForumComment pComment) {
         // 拿到系统设置的发表评论奖励积分数
-        Integer commentIntegral = SysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
+        Integer commentIntegral = sysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
         if (commentIntegral > 0) {
             this.userInfoService.updateUserIntegral(comment.getUserId(), UserIntegralOperTypeEnum.POST_COMMENT, UserIntegralChangeTypeEnum.ADD.getChangeType(), commentIntegral);
         }
@@ -326,7 +329,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
                 forumArticleMapper.updateArticleCount(UpdateArticleCountTypeEnum.COMMENT_COUNT.getType(), -1, comment.getArticleId());
             }
             // 拿到系统设置的发表评论奖励积分数，并扣除相应积分
-            Integer integral = SysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
+            Integer integral = sysCacheUtils.getSysSetting().getCommentSetting().getCommentIntegral();
             userInfoService.updateUserIntegral(comment.getUserId(), UserIntegralOperTypeEnum.DEL_COMMENT, UserIntegralChangeTypeEnum.REDUCE.getChangeType(), integral);
         }
         // 记录消息

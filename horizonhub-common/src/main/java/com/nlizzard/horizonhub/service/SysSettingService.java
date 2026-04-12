@@ -60,12 +60,12 @@ public interface SysSettingService {
     Integer deleteSysSettingByCode(String code);
 
     /**
-     * 将系统设置初始化到内存中  在系统启动时调用  将系统设置加载到内存中  以便后续使用  避免每次查询数据库获取系统设置
+     * 将系统设置初始化到redis中  在系统启动时调用  将系统设置加载到redis中  以便后续使用  避免每次查询数据库获取系统设置
      */
     SysSettingDto initSysSettingToCache();
 
     /**
-     * 更新系统设置  将新的系统设置保存到数据库中  同时更新内存中的系统设置  以便后续使用
+     * 更新系统设置  将新的系统设置保存到数据库中  同时更新redis中的系统设置  以便后续使用
      *
      * @param sysSettingDto 系统设置信息
      */

@@ -23,17 +23,6 @@ public class AppConfig {
     @Value("${isDev.testUserEmail}")
     private String DevTestEmail;
 
-    /**
-     * 内部刷新系统缓存接口API_key
-     */
-    @Value("${inner.api.appKey:}")
-    private String innerApiAppKey;
-
-    /**
-     * 内部刷新系统缓存接口秘钥
-     */
-    @Value("${inner.api.appSecret:}")
-    private String innerApiAppSecret;
 
     public String getProjectFolder() {
         return projectFolder;
@@ -47,12 +36,5 @@ public class AppConfig {
         return DevTestEmail;
     }
 
-    public String getInnerApiAppKey() {
-        return innerApiAppKey;
-    }
-
-    public String getInnerApiAppSecret() {
-        return innerApiAppSecret;
-    }
 }
 

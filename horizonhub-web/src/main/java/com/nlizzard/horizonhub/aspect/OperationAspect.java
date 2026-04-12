@@ -1,11 +1,8 @@
 package com.nlizzard.horizonhub.aspect;
 
-import cn.hutool.core.date.DateUtil;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.constants.Constants;
-import com.nlizzard.horizonhub.entity.config.AppConfig;
-import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
@@ -19,7 +16,6 @@ import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.ForumArticleService;
 import com.nlizzard.horizonhub.service.ForumCommentService;
 import com.nlizzard.horizonhub.service.LikeRecordService;
-import com.nlizzard.horizonhub.service.UserInfoService;
 import com.nlizzard.horizonhub.utils.DateUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import com.nlizzard.horizonhub.utils.VerifyUtils;
@@ -35,6 +31,8 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -42,6 +40,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Date;
 
 @Component
@@ -50,10 +52,93 @@ public class OperationAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(OperationAspect.class);
 
-    private static final String[] TYPE_BASE = {"java.lang.String", "java.lang.Integer", "java.lang.Long"};
+    private static final String[] TYPE_BASE = {
+            "java.lang.String", "java.lang.Integer", "java.lang.Long"
+    };
 
-    @Resource
-    private WebConfig webConfig;
+    /**
+     * Redis 中已有计数时：
+     * 1. 判断是否达到上限
+     * 2. 未达到则原子自增
+     * 3. 设置过期时间
+     * 返回值：
+     * -1  表示已达到上限
+     * >=0 表示自增后的最新值
+     * -2  表示 key 不存在
+     */
+    private static final DefaultRedisScript<Long> CHECK_AND_INCREMENT_EXISTING_SCRIPT;
+
+    /**
+     * Redis key 不存在时：
+     * 1. 用 DB 查询值做初始化
+     * 2. 判断是否达到上限
+     * 3. 未达到则原子自增
+     * 返回值：
+     * -1  表示已达到上限
+     * >=0 表示自增后的最新值
+     */
+    private static final DefaultRedisScript<Long> CHECK_AND_INCREMENT_WITH_INIT_SCRIPT;
+
+    /**
+     * 业务失败时回滚预占次数
+     */
+    private static final DefaultRedisScript<Long> DECREMENT_SCRIPT;
+
+    static {
+        CHECK_AND_INCREMENT_EXISTING_SCRIPT = new DefaultRedisScript<>();
+        CHECK_AND_INCREMENT_EXISTING_SCRIPT.setResultType(Long.class);
+        CHECK_AND_INCREMENT_EXISTING_SCRIPT.setScriptText(
+                "local key = KEYS[1] \n" +
+                        "local limitCount = tonumber(ARGV[1]) \n" +
+                        "local current = redis.call('GET', key) \n" +
+                        "if (not current) then \n" +
+                        "    return -2 \n" +
+                        "end \n" +
+                        "current = tonumber(current) \n" +
+                        "if (current >= limitCount) then \n" +
+                        "    return -1 \n" +
+                        "end \n" +
+                        "current = redis.call('INCR', key) \n" +
+                        "return current"
+        );
+
+        CHECK_AND_INCREMENT_WITH_INIT_SCRIPT = new DefaultRedisScript<>();
+        CHECK_AND_INCREMENT_WITH_INIT_SCRIPT.setResultType(Long.class);
+        CHECK_AND_INCREMENT_WITH_INIT_SCRIPT.setScriptText(
+                "local key = KEYS[1] \n" +
+                        "local dbCount = tonumber(ARGV[1]) \n" +
+                        "local limitCount = tonumber(ARGV[2]) \n" +
+                        "local expireSeconds = tonumber(ARGV[3]) \n" +
+                        "local current = redis.call('GET', key) \n" +
+                        "if (not current) then \n" +
+                        "    current = dbCount \n" +
+                        "    redis.call('SET', key, current, 'EX', expireSeconds) \n" +
+                        "else \n" +
+                        "    current = tonumber(current) \n" +
+                        "end \n" +
+                        "if (current >= limitCount) then \n" +
+                        "    return -1 \n" +
+                        "end \n" +
+                        "current = redis.call('INCR', key) \n" +
+                        "return current"
+        );
+
+        DECREMENT_SCRIPT = new DefaultRedisScript<>();
+        DECREMENT_SCRIPT.setResultType(Long.class);
+        DECREMENT_SCRIPT.setScriptText(
+                "local key = KEYS[1] \n" +
+                        "local current = redis.call('GET', key) \n" +
+                        "if (not current) then \n" +
+                        "    return 0 \n" +
+                        "end \n" +
+                        "current = tonumber(current) \n" +
+                        "if (current > 0) then \n" +
+                        "    current = redis.call('DECR', key) \n" +
+                        "    return 0 \n" +
+                        "end \n" +
+                        "return current"
+        );
+    }
 
     @Resource
     private ForumArticleService forumArticleService;
@@ -65,135 +150,223 @@ public class OperationAspect {
     private LikeRecordService likeRecordService;
 
     @Resource
-    private UserInfoService userInfoService;
+    private SysCacheUtils sysCacheUtils;
 
     @Resource
-    private AppConfig appConfig;
+    private StringRedisTemplate stringRedisTemplate;
 
-    // 定义切点，拦截所有被 @GlobalInterceptor 注解的方法
     @Pointcut("@annotation(com.nlizzard.horizonhub.annotation.GlobalInterceptor)")
     private void requestInterceptor() {
     }
 
-    // 定义环绕通知，在方法执行前后进行处理
     @Around("requestInterceptor()")
-    public Object interceptorDo(ProceedingJoinPoint point) throws BusinessException {
+    public Object interceptorDo(ProceedingJoinPoint point) throws Throwable {
+        boolean frequencyAcquired = false;
+        UserOperFrequencyTypeEnum frequencyType = null;
+        SessionWebUserDto webUserDto = null;
+
         try {
-            // 获取方法实际参数值
             Object[] arguments = point.getArgs();
-            // 获取方法的参数类型列表
             MethodSignature methodSignature = (MethodSignature) point.getSignature();
             Class<?>[] parameterTypes = methodSignature.getMethod().getParameterTypes();
-            // 获取方法名称
             String methodName = point.getSignature().getName();
-            // 获取代理对象实体
             Object target = point.getTarget();
-            // 通过反射获取方法对象
             Method method = target.getClass().getMethod(methodName, parameterTypes);
-            // 获取方法上的 @GlobalInterceptor 注解
+
             GlobalInterceptor interceptor = method.getAnnotation(GlobalInterceptor.class);
-            // 校验参数
+
             if (interceptor.checkParams()) {
                 validateParams(method, arguments);
             }
-            // 检验频率
-            this.checkFrequency(interceptor.frequencyType());
 
-            //执行操作
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attributes == null) {
+                throw new BusinessException(ResponseCodeEnum.CODE_500);
+            }
+
+            HttpServletRequest request = attributes.getRequest();
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                webUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+            }
+
+            frequencyType = interceptor.frequencyType();
+
+            // 有频率限制的操作必须有登录用户
+            if (needCheckFrequency(frequencyType) && webUserDto == null) {
+                throw new BusinessException(ResponseCodeEnum.CODE_600.getCode(), "用户未登录");
+            }
+
+            // 进入业务前先原子占位，防止并发穿透
+            frequencyAcquired = tryAcquireFrequency(frequencyType, webUserDto);
+
             Object pointResult = point.proceed();
 
-            // 执行完成后
+            // 只有status=success 才算真正成功
+            boolean success = false;
             if (pointResult instanceof ResponseVO responseVO) {
-                if (Constants.STATUS_SUCCESS.equals(responseVO.getStatus())) {
-                    addOpCount(interceptor.frequencyType());
-                }
+                success = Constants.STATUS_SUCCESS.equals(responseVO.getStatus());
             }
+
+            // 非成功结果，回滚预占次数
+            if (!success && frequencyAcquired) {
+                rollbackFrequencyQuietly(frequencyType, webUserDto);
+            }
+
             return pointResult;
-        } catch (BusinessException e) {
+        } catch (Throwable e) {
+            if (frequencyAcquired) {
+                rollbackFrequencyQuietly(frequencyType, webUserDto);
+            }
             logger.error("全局拦截器异常", e);
             throw e;
-        } catch (Throwable e) {
-            logger.error("全局拦截器异常", e);
-            throw new BusinessException(ResponseCodeEnum.CODE_500);
         }
     }
 
-    // 按类型检验频率 TODO 频率检查最佳实现是通过redis去做
-    private void checkFrequency(UserOperFrequencyTypeEnum typeEnum) {
-        if (typeEnum == null || typeEnum == UserOperFrequencyTypeEnum.NO_CHECK) {
+    /**
+     * 原子校验 + 预占次数
+     */
+    private boolean tryAcquireFrequency(UserOperFrequencyTypeEnum typeEnum, SessionWebUserDto webUserDto) {
+        if (!needCheckFrequency(typeEnum)) {
+            return false;
+        }
+
+        String userId = webUserDto.getUserId();
+        String curDate = DateUtils.format(new Date(), DateTimePatternEnum.YYYYMMDD.getPattern());
+        String frequencyRedisKey = buildFrequencyRedisKey(userId, curDate, typeEnum);
+
+        int limit = getLimitCount(typeEnum);
+        long expireSeconds = getSecondsToTomorrow();
+
+        // 先从redis中查
+        Long result = stringRedisTemplate.execute(
+                CHECK_AND_INCREMENT_EXISTING_SCRIPT,
+                Collections.singletonList(frequencyRedisKey),
+                String.valueOf(limit)
+        );
+        // 命中，但是操作次数达到上限
+        if (result == -1L) {
+            throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), getFrequencyLimitMsg(typeEnum, limit));
+        }
+        // 命中且未达到上限
+        if (result != -2L) {
+            return true;
+        }
+
+        // 未命中，从数据库中查操作数据
+        int dbCount = getTodayCount(typeEnum, webUserDto, curDate);
+        result = stringRedisTemplate.execute(
+                CHECK_AND_INCREMENT_WITH_INIT_SCRIPT,
+                Collections.singletonList(frequencyRedisKey),
+                String.valueOf(dbCount),
+                String.valueOf(limit),
+                String.valueOf(expireSeconds)
+        );
+        // 超过上限
+        if (result == -1L) {
+            throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), getFrequencyLimitMsg(typeEnum, limit));
+        }
+
+        return true;
+    }
+
+
+    private void rollbackFrequencyQuietly(UserOperFrequencyTypeEnum typeEnum, SessionWebUserDto webUserDto) {
+        try {
+            rollbackFrequency(typeEnum, webUserDto);
+        } catch (Exception ex) {
+            logger.error("回滚频率计数失败", ex);
+        }
+    }
+
+    /**
+     * 业务失败时回滚预占次数
+     */
+    private void rollbackFrequency(UserOperFrequencyTypeEnum typeEnum, SessionWebUserDto webUserDto) {
+        if (!needCheckFrequency(typeEnum) || webUserDto == null) {
             return;
         }
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        SessionWebUserDto webUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
 
-        String curDate = DateUtils.format(new Date(), DateTimePatternEnum.YYYY_MM_DD.getPattern());
-        String sessionKey = Constants.SESSION_KEY_FREQUENCY + curDate + typeEnum;
+        String userId = webUserDto.getUserId();
+        String curDate = DateUtils.format(new Date(), DateTimePatternEnum.YYYYMMDD.getPattern());
+        String frequencyRedisKey = buildFrequencyRedisKey(userId, curDate, typeEnum);
 
-        Integer count = (Integer) session.getAttribute(sessionKey);
-        SysSettingDto sysSettingDto = SysCacheUtils.getSysSetting();
+        stringRedisTemplate.execute(
+                DECREMENT_SCRIPT,
+                Collections.singletonList(frequencyRedisKey)
+        );
+    }
+
+    // 是否需要频率检测
+    private boolean needCheckFrequency(UserOperFrequencyTypeEnum typeEnum) {
+        return typeEnum != null && typeEnum != UserOperFrequencyTypeEnum.NO_CHECK;
+    }
+
+    // 构造redis中频率key
+    private String buildFrequencyRedisKey(String userId, String curDate, UserOperFrequencyTypeEnum typeEnum) {
+        return Constants.FREQUENCY_KEY + ":" + curDate + ":" + userId + ":" + typeEnum.getOperType();
+    }
+
+    // 从系统设置中拿到限额
+    private int getLimitCount(UserOperFrequencyTypeEnum typeEnum) {
+        SysSettingDto sysSettingDto = sysCacheUtils.getSysSetting();
+        return switch (typeEnum) {
+            case POST_ARTICLE -> sysSettingDto.getPostSetting().getPostDayCountThreshold();
+            case POST_COMMENT -> sysSettingDto.getCommentSetting().getCommentDayCountThreshold();
+            case DO_LIKE -> sysSettingDto.getLikeSetting().getLikeDayCountThreshold();
+            case IMAGE_UPLOAD -> sysSettingDto.getPostSetting().getDayImageUploadCount();
+            default -> Integer.MAX_VALUE;
+        };
+    }
+
+    private String getFrequencyLimitMsg(UserOperFrequencyTypeEnum typeEnum, int limit) {
+        return switch (typeEnum) {
+            case POST_ARTICLE -> "当前系统限制每天发布文章的次数为 " + limit + " 篇";
+            case POST_COMMENT -> "当前系统限制每天发布评论的次数为 " + limit + " 条";
+            case DO_LIKE -> "当前系统限制每天点赞的次数为 " + limit + " 次";
+            case IMAGE_UPLOAD -> "当前系统限制每天上传图片的次数为 " + limit + " 次";
+            default -> "操作过于频繁";
+        };
+    }
+
+    /**
+     * Redis 未命中时回源数据库
+     */
+    private int getTodayCount(UserOperFrequencyTypeEnum typeEnum, SessionWebUserDto webUserDto, String curDate) {
         switch (typeEnum) {
             case POST_ARTICLE:
-                if (count == null) {
-                    ForumArticleQuery forumArticleQuery = new ForumArticleQuery();
-                    forumArticleQuery.setUserId(webUserDto.getUserId());
-                    forumArticleQuery.setPostTimeStart(curDate);
-                    forumArticleQuery.setPostTimeEnd(curDate);
-                    count = forumArticleService.findCountByParam(forumArticleQuery);
-                }
-                if (count >= sysSettingDto.getPostSetting().getPostDayCountThreshold()) {
-                    throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), "当前系统限制每天发布文章的次数为 " + count + " 篇");
-                }
-                break;
+                ForumArticleQuery forumArticleQuery = new ForumArticleQuery();
+                forumArticleQuery.setUserId(webUserDto.getUserId());
+                forumArticleQuery.setPostTimeStart(curDate);
+                forumArticleQuery.setPostTimeEnd(curDate);
+                return forumArticleService.findCountByParam(forumArticleQuery);
+
             case POST_COMMENT:
-                if (count == null) {
-                    ForumCommentQuery forumCommentQuery = new ForumCommentQuery();
-                    forumCommentQuery.setUserId(webUserDto.getUserId());
-                    forumCommentQuery.setPostTimeStart(curDate);
-                    forumCommentQuery.setPostTimeEnd(curDate);
-                    count = forumCommentService.findCountByParam(forumCommentQuery);
-                }
+                ForumCommentQuery forumCommentQuery = new ForumCommentQuery();
+                forumCommentQuery.setUserId(webUserDto.getUserId());
+                forumCommentQuery.setPostTimeStart(curDate);
+                forumCommentQuery.setPostTimeEnd(curDate);
+                return forumCommentService.findCountByParam(forumCommentQuery);
 
-                if (count >= sysSettingDto.getCommentSetting().getCommentDayCountThreshold()) {
-                    throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), "当前系统限制每天发布评论的次数为 " + count + " 条");
-                }
-                break;
             case DO_LIKE:
-                if (count == null) {
-                    LikeRecordQuery recordQuery = new LikeRecordQuery();
-                    recordQuery.setUserId(webUserDto.getUserId());
-                    recordQuery.setCreateTimeStart(curDate);
-                    recordQuery.setCreateTimeEnd(curDate);
-                    count = likeRecordService.findCountByParam(recordQuery);
-
-                }
-                if (count >= sysSettingDto.getLikeSetting().getLikeDayCountThreshold()) {
-                    throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), "当前系统限制每天点赞的次数为 " + count + " 次");
-                }
-                break;
-            case IMAGE_UPLOAD: // TODO 当前实现存在问题，如果用户重新登录，会话信息会丢失，图片上传计数会失效
-                if (count == null) {
-                    count = 0;
-                }
-                if (count >= sysSettingDto.getPostSetting().getDayImageUploadCount()) {
-                    throw new BusinessException(ResponseCodeEnum.CODE_602.getCode(), "当前系统限制每天上传图片的次数为 " + count + " 次");
-                }
-                break;
+                LikeRecordQuery recordQuery = new LikeRecordQuery();
+                recordQuery.setUserId(webUserDto.getUserId());
+                recordQuery.setCreateTimeStart(curDate);
+                recordQuery.setCreateTimeEnd(curDate);
+                return likeRecordService.findCountByParam(recordQuery);
+            default:
+                return 0;
         }
-        session.setAttribute(sessionKey, count);
     }
 
-    //统计已经统计数据
-    private void addOpCount(UserOperFrequencyTypeEnum typeEnum) {
-        if (typeEnum == null || typeEnum == UserOperFrequencyTypeEnum.NO_CHECK) {
-            return;
-        }
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        HttpSession session = request.getSession();
-        String curDate = DateUtil.format(new Date(), DateTimePatternEnum.YYYY_MM_DD.getPattern());
-        String sessionKey = Constants.SESSION_KEY_FREQUENCY + curDate + typeEnum;
-        Integer count = (Integer) session.getAttribute(sessionKey);
-        session.setAttribute(sessionKey, count + 1);
+    /**
+     * 过期时间设到次日 00:00:00
+     */
+    private long getSecondsToTomorrow() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime tomorrow = LocalDate.now().plusDays(1).atStartOfDay();
+        return Duration.between(now, tomorrow).getSeconds();
     }
 
     /**
@@ -222,8 +395,8 @@ public class OperationAspect {
         try {
             // 通过反射获取对象的字段，遍历字段，如果字段上有 @VerifyParam 注解，则进行校验
             String typeName = parameter.getParameterizedType().getTypeName();
-            Class classz = Class.forName(typeName);
-            Field[] fields = classz.getDeclaredFields();
+            Class<?> clazz = Class.forName(typeName);
+            Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 VerifyParam fieldVerifyParam = field.getAnnotation(VerifyParam.class);
                 if (fieldVerifyParam == null) {

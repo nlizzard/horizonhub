@@ -29,15 +29,6 @@ public class WebConfig extends AppConfig {
     @Value("${admin.emails:}")
     private String adminEmails;
 
-    /**
-     * 管理端访问web端写入系统设置的秘钥
-     */
-    @Value("${inner.api.appKey}")
-    private String innerApiAppKey;
-
-    @Value("${inner.api.appSecret}")
-    private String innerApiAppSecret;
-
     public Boolean getIsSendEmailCode() {
         return isSendEmailCode;
     }
@@ -54,11 +45,4 @@ public class WebConfig extends AppConfig {
         return adminEmails;
     }
 
-    public String getInnerApiAppKey() {
-        return innerApiAppKey;
-    }
-
-    public String getInnerApiAppSecret() {
-        return innerApiAppSecret;
-    }
 }

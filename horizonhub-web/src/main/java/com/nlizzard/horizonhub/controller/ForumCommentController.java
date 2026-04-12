@@ -34,14 +34,15 @@ public class ForumCommentController extends BaseController {
     @Resource
     private LikeRecordService likeRecordService;
 
+    @Resource
+    private SysCacheUtils sysCacheUtils;
+
     /**
      * 分页加载评论
      *
-     * @param session
      * @param articleId 文章 ID
      * @param pageNo    当前页码
      * @param orderType 排序类型，0-默认排序（按点赞数和评论ID升序），1-按评论ID降序
-     * @return
      */
     @RequestMapping("/loadComment")
     @GlobalInterceptor(checkParams = true)
@@ -50,7 +51,7 @@ public class ForumCommentController extends BaseController {
                                                                     Integer pageNo,
                                                                     Integer orderType) {
         // 检查系统设置中是否开启评论功能
-        if (!SysCacheUtils.getSysSetting().getCommentSetting().getCommentOpen()) {
+        if (!sysCacheUtils.getSysSetting().getCommentSetting().getCommentOpen()) {
             throw new BusinessException(ResponseCodeEnum.CODE_404);
         }
         // 构建评论查询对象
@@ -106,10 +107,8 @@ public class ForumCommentController extends BaseController {
     /**
      * 置顶/取消置顶评论
      *
-     * @param session
      * @param commentId 评论 ID
      * @param topType   置顶类型，0-取消置顶，1-置顶
-     * @return
      */
     @RequestMapping("/changeTopType")
     @GlobalInterceptor(checkLogin = true, checkParams = true)
@@ -124,13 +123,11 @@ public class ForumCommentController extends BaseController {
     /**
      * 发表评论
      *
-     * @param session
      * @param articleId   文章 ID
      * @param pCommentId  父评论 ID
      * @param content     评论内容
      * @param replyUserId 被回复用户 ID（如果是回复评论，则传入被回复用户 ID）
      * @param image       评论图片
-     * @return
      */
     @RequestMapping("/postComment")
     @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_COMMENT)
@@ -141,7 +138,7 @@ public class ForumCommentController extends BaseController {
                                           String replyUserId,
                                           MultipartFile image) {
         // 系统是否关闭评论
-        if (!SysCacheUtils.getSysSetting().getCommentSetting().getCommentOpen()) {
+        if (!sysCacheUtils.getSysSetting().getCommentSetting().getCommentOpen()) {
             throw new BusinessException(ResponseCodeEnum.CODE_404.getCode(), "当前系统已关闭评论功能");
         }
         // 评论内容和图片不能同时为空
