@@ -9,7 +9,7 @@ HorizonHub 是一个基于 Java 21 和 Spring Boot 3 的论坛系统。当前仓
 ## 项目说明
 
 - 当前仓库：`https://github.com/nlizzard/horizonhub`
-- 前端仓库：`https://github.com/nlizzard/horizonhub-front`
+- 前端仓库：`https://github.com/nlizzard/horizonhub-front`（现在已经移动到当前仓库的horizonhub-front目录下了，未来不单独维护前端仓库）
 - 当前仓库只包含后端代码，不包含前端页面工程
 - `horizonhub-web` 和 `horizonhub-admin` 是后端服务模块，不是前端项目
 
