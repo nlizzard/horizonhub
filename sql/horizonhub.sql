@@ -171,7 +171,7 @@ CREATE TABLE `user_info` (
   `user_id` varchar(19) NOT NULL COMMENT '用户ID',
   `nick_name` varchar(20) DEFAULT NULL COMMENT '昵称',
   `email` varchar(150) DEFAULT NULL COMMENT '邮箱',
-  `password` varchar(50) DEFAULT NULL COMMENT '密码',
+  `password` varchar(60) DEFAULT NULL COMMENT '密码（BCrypt 摘要，固定 60 字符）',
   `sex` tinyint(1) DEFAULT NULL COMMENT '0:女 1:男',
   `person_description` varchar(200) DEFAULT NULL COMMENT '个人描述',
   `join_time` datetime DEFAULT NULL COMMENT '加入时间',
