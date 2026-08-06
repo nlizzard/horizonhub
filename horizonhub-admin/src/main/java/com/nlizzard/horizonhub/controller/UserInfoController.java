@@ -10,6 +10,7 @@ import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.service.UserInfoService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,7 +38,7 @@ public class UserInfoController extends BaseController {
      * @param status 状态：0禁用，1启用
      * @param userId 用户Id
      */
-    @RequestMapping("/updateUserStatus")
+    @PostMapping("/updateUserStatus")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> updateUserStatus(@VerifyParam(required = true) Integer status,
                                              @VerifyParam(required = true) String userId) {
@@ -53,7 +54,7 @@ public class UserInfoController extends BaseController {
      * @param integral 积分
      * @return
      */
-    @RequestMapping("/sendMessage")
+    @PostMapping("/sendMessage")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> sendMessage(@VerifyParam(required = true) String userId,
                                         @VerifyParam(required = true) String message,

@@ -19,6 +19,7 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -89,7 +90,7 @@ public class ForumCommentController extends BaseController {
      * @param commentId 评论 ID
      * @return 更新后的评论信息
      */
-    @RequestMapping("/doLike")
+    @PostMapping("/doLike")
     @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_LIKE)
     public ResponseVO<ForumComment> doLike(HttpSession session,
                                            @VerifyParam(required = true) Integer commentId) {
@@ -110,7 +111,7 @@ public class ForumCommentController extends BaseController {
      * @param commentId 评论 ID
      * @param topType   置顶类型，0-取消置顶，1-置顶
      */
-    @RequestMapping("/changeTopType")
+    @PostMapping("/changeTopType")
     @GlobalInterceptor(checkLogin = true, checkParams = true)
     public ResponseVO<Void> changeTopType(HttpSession session,
                                           @VerifyParam(required = true) Integer commentId,
@@ -129,7 +130,7 @@ public class ForumCommentController extends BaseController {
      * @param replyUserId 被回复用户 ID（如果是回复评论，则传入被回复用户 ID）
      * @param image       评论图片
      */
-    @RequestMapping("/postComment")
+    @PostMapping("/postComment")
     @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_COMMENT)
     public ResponseVO<Object> postComment(HttpSession session,
                                           @VerifyParam(required = true) String articleId,

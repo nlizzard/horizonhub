@@ -1,6 +1,5 @@
 package com.nlizzard.horizonhub.controller;
 
-import cn.hutool.crypto.SecureUtil;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.basecontroller.BaseController;
@@ -14,6 +13,7 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -48,7 +48,7 @@ public class AccountController extends BaseController {
      * @param password  密码
      * @param checkCode 图片验证码
      */
-    @RequestMapping("/login")
+    @PostMapping("/login")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<SessionAdminUserDto> login(HttpSession session,
                                                  @VerifyParam(required = true) String account,
@@ -59,7 +59,9 @@ public class AccountController extends BaseController {
                 throw new BusinessException("图片验证码不正确");
             }
 
-            if (!adminConfig.getAdminAccount().equals(account) || !SecureUtil.md5(adminConfig.getAdminPassword()).equals(password)) {
+            // 前端发送明文口令（必须走 HTTPS），与配置中的后台口令直接比对；
+            // 生产环境口令由环境变量 ADMIN_PASSWORD 注入。
+            if (!adminConfig.getAdminAccount().equals(account) || !adminConfig.getAdminPassword().equals(password)) {
                 throw new BusinessException("账号或密码错误");
             }
             // 登录成功，创建session

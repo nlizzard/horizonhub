@@ -13,6 +13,7 @@ import com.nlizzard.horizonhub.service.ForumBoardService;
 import com.nlizzard.horizonhub.utils.FileUtils;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -46,7 +47,7 @@ public class ForumBoardController extends BaseController {
      * @param postType  发帖类型，0-普通发帖，1-投票发帖
      * @param cover     版块封面图片
      */
-    @RequestMapping("/saveBoard")
+    @PostMapping("/saveBoard")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> saveBoard(Integer boardId,
                                       @VerifyParam(required = true) Integer pBoardId,
@@ -75,7 +76,7 @@ public class ForumBoardController extends BaseController {
      *
      * @param boardId 版块 ID
      */
-    @RequestMapping("/delBoard")
+    @PostMapping("/delBoard")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> delBoard(@VerifyParam(required = true) Integer boardId) {
         forumBoardService.deleteForumBoardByBoardId(boardId);
@@ -87,7 +88,7 @@ public class ForumBoardController extends BaseController {
      *
      * @param boardIds 逗号分隔的板块 ID 列表，按照新的排序顺序传入
      */
-    @RequestMapping("/changeBoardSort")
+    @PostMapping("/changeBoardSort")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> changeSort(@VerifyParam(required = true) String boardIds) {
         forumBoardService.changeSort(boardIds);

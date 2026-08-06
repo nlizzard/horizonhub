@@ -8,6 +8,7 @@ import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.service.SysSettingService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,7 +36,7 @@ public class SysSettingController extends BaseController {
      * @param registerDto 注册相关
      * @param emailDto    邮件相关
      */
-    @RequestMapping("saveSetting")
+    @PostMapping("saveSetting")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> saveSetting(@VerifyParam SysSetting4AuditDto auditDto,
                                         @VerifyParam SysSetting4CommentDto commentDto,

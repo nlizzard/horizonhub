@@ -28,6 +28,7 @@ import com.nlizzard.horizonhub.utils.CopyTools;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -90,7 +91,7 @@ public class UserCenterController extends BaseController {
      * @param avatar            头像
      * @return 响应结果
      */
-    @RequestMapping("/updateUserInfo")
+    @PostMapping("/updateUserInfo")
     @GlobalInterceptor(checkParams = true, checkLogin = true)
     public ResponseVO<Void> updateUserInfo(HttpSession session,
                                            Integer sex,

@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.*;
@@ -64,7 +65,7 @@ public class ForumArticleController extends BaseController {
      *
      * @param articleIds 文章 ID，逗号分隔
      */
-    @RequestMapping("/delArticle")
+    @PostMapping("/delArticle")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> delArticle(@VerifyParam(required = true) String articleIds) {
         forumArticleService.delArticle(articleIds);
@@ -78,7 +79,7 @@ public class ForumArticleController extends BaseController {
      * @param pBoardId  父板块 ID
      * @param boardId   板块ID
      */
-    @RequestMapping("/updateBoard")
+    @PostMapping("/updateBoard")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> updateBoard(@VerifyParam(required = true) String articleId, @VerifyParam(required = true) Integer pBoardId, Integer boardId) {
         boardId = boardId == null ? 0 : boardId;
@@ -169,7 +170,7 @@ public class ForumArticleController extends BaseController {
      * @param articleId 文章 ID
      * @return
      */
-    @RequestMapping("/topArticle")
+    @PostMapping("/topArticle")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> topArticle(@VerifyParam(required = true) Integer topType,
                                        @VerifyParam(required = true) String articleId) {
@@ -184,7 +185,7 @@ public class ForumArticleController extends BaseController {
      *
      * @param articleIds 文章 ID，逗号分隔
      */
-    @RequestMapping("/auditArticle")
+    @PostMapping("/auditArticle")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> auditArticle(@VerifyParam(required = true) String articleIds) {
         forumArticleService.auditArticle(articleIds);
@@ -227,7 +228,7 @@ public class ForumArticleController extends BaseController {
      *
      * @param commentIds 评论id
      */
-    @RequestMapping("/delComment")
+    @PostMapping("/delComment")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> delComment(@VerifyParam(required = true) String commentIds) {
         forumCommentService.delComment(commentIds);
@@ -239,7 +240,7 @@ public class ForumArticleController extends BaseController {
      *
      * @param commentIds 评论ID
      */
-    @RequestMapping("/auditComment")
+    @PostMapping("/auditComment")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> auditComment(@VerifyParam(required = true) String commentIds) {
         forumCommentService.auditComment(commentIds);

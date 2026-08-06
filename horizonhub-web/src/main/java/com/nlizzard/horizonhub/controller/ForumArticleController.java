@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -138,7 +139,7 @@ public class ForumArticleController extends BaseController {
      * @param summary         文章摘要
      * @return
      */
-    @RequestMapping("/postArticle")
+    @PostMapping("/postArticle")
     @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.POST_ARTICLE)
     public ResponseVO<String> postArticle(HttpSession session,
                                           MultipartFile cover,
@@ -265,7 +266,7 @@ public class ForumArticleController extends BaseController {
      * @param attachmentType  附件类型 0:无附件 1:有附件
      * @return
      */
-    @RequestMapping("/updateArticle")
+    @PostMapping("/updateArticle")
     @GlobalInterceptor(checkLogin = true, checkParams = true)
     public ResponseVO<String> updateArticle(HttpSession session,
                                             MultipartFile cover,
@@ -309,7 +310,7 @@ public class ForumArticleController extends BaseController {
      * @param articleId 文章 ID
      * @return
      */
-    @RequestMapping("/doLike")
+    @PostMapping("/doLike")
     @GlobalInterceptor(checkLogin = true, checkParams = true, frequencyType = UserOperFrequencyTypeEnum.DO_LIKE)
     public ResponseVO<Void> doLike(HttpSession session, @VerifyParam(required = true) String articleId) {
         SessionWebUserDto userDto = getUserInfoFromSession(session);
@@ -347,7 +348,7 @@ public class ForumArticleController extends BaseController {
      * @param response
      * @param fileId   附件文件 ID
      */
-    @RequestMapping("/attachmentDownload")
+    @PostMapping("/attachmentDownload")
     @GlobalInterceptor(checkLogin = true, checkParams = true)
     public void attachmentDownload(HttpSession session, HttpServletRequest request, HttpServletResponse response,
                                    @VerifyParam(required = true) String fileId) {

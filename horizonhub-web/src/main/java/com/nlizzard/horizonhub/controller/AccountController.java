@@ -20,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class AccountController extends BaseController {
      * @param checkCode 图片验证码
      * @param type      0-注册验证码，1-找回密码验证码
      */
-    @RequestMapping("/sendEmailCode")
+    @PostMapping("/sendEmailCode")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> sendEmailCode(HttpSession session,
                                           @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
@@ -101,7 +102,7 @@ public class AccountController extends BaseController {
      * @param checkCode 图片验证码
      * @param emailCode 邮箱验证码
      */
-    @RequestMapping("/register")
+    @PostMapping("/register")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> register(HttpSession session,
                                      @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
@@ -127,7 +128,7 @@ public class AccountController extends BaseController {
      * @param password  密码(md5加密后的密码)
      * @param checkCode 图片验证码
      */
-    @RequestMapping("/login")
+    @PostMapping("/login")
     @GlobalInterceptor(checkParams = true)
     public ResponseVO<SessionWebUserDto> login(HttpSession session, HttpServletRequest request,
                                                @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
@@ -161,7 +162,7 @@ public class AccountController extends BaseController {
     /**
      * 退出登录接口
      */
-    @RequestMapping("/logout")
+    @PostMapping("/logout")
     @GlobalInterceptor(checkLogin = true)
     public ResponseVO<Void> logout(HttpSession session) {
         session.removeAttribute(Constants.SESSION_KEY);
@@ -190,7 +191,7 @@ public class AccountController extends BaseController {
      * @param checkCode 图片验证码
      * @param emailCode 邮箱验证码
      */
-    @RequestMapping("/resetPwd")
+    @PostMapping("/resetPwd")
     @GlobalInterceptor(checkParams = true, checkLogin = true)
     public ResponseVO<Void> resetPwd(HttpSession session,
                                      @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
