@@ -22,6 +22,7 @@ import com.nlizzard.horizonhub.service.ForumBoardService;
 import com.nlizzard.horizonhub.service.UserInfoService;
 import com.nlizzard.horizonhub.service.UserMessageService;
 import com.nlizzard.horizonhub.utils.FileUtils;
+import com.nlizzard.horizonhub.utils.HtmlSanitizer;
 import com.nlizzard.horizonhub.utils.ImageUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
@@ -55,6 +56,9 @@ public class ForumArticleServiceImpl implements ForumArticleService {
 
     @Resource
     private FileUtils fileUtils;
+
+    @Resource
+    private HtmlSanitizer htmlSanitizer;
 
     @Resource
     private ImageUtils imageUtils;
@@ -214,8 +218,8 @@ public class ForumArticleServiceImpl implements ForumArticleService {
                     ArticleStatusEnum.AUDIT.getStatus());
         }
 
-        // 将临时文件夹中的图片移动到正式文件夹中并替换正文中图片路径
-        String content = article.getContent();
+        // 先对富文本正文做 XSS 白名单清洗，再处理图片路径
+        String content = htmlSanitizer.clean(article.getContent());
         if (!StringUtils.isBlank(content)) {
             String month = imageUtils.resetImagePathInHtml(content);
             //避免替换文章中用户编写的temp，所以前后带上/，只换了图片路径中的temp
@@ -340,6 +344,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
      * 更新文章
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateArticle(Boolean isAdmin, ForumArticle article, ForumArticleAttachment forumArticleAttachment, MultipartFile cover, MultipartFile attachment) throws BusinessException {
         // 判断文章所属权
         ForumArticle dbInfo = forumArticleMapper.selectByArticleId(article.getArticleId());
@@ -396,8 +401,8 @@ public class ForumArticleServiceImpl implements ForumArticleService {
                     ArticleStatusEnum.AUDIT.getStatus());
         }
 
-        //替换图片
-        String content = article.getContent();
+        //先对富文本正文做 XSS 白名单清洗，再处理图片路径
+        String content = htmlSanitizer.clean(article.getContent());
         if (!StringUtils.isBlank(content)) {
             String month = imageUtils.resetImagePathInHtml(content);
             //避免替换博客中template关键，所以前后带上/
@@ -437,6 +442,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
      * @param articleIds 文章 ID，逗号分隔
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delArticle(String articleIds) {
         String[] articleIdArray = articleIds.split(",");
         for (String articleId : articleIdArray) {
@@ -482,6 +488,7 @@ public class ForumArticleServiceImpl implements ForumArticleService {
      * @param articleIds 文章 ID，逗号分隔
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void auditArticle(String articleIds) {
         String[] articleIdArray = articleIds.split(",");
         for (String articleId : articleIdArray) {
