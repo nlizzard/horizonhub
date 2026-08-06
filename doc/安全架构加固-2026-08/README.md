@@ -30,6 +30,9 @@
 | `eb6fdd6` | feat | 引入 Token 基础设施（jjwt + Redis 有状态 Token） | [10-Session到Token演进.md](10-Session到Token演进.md) |
 | `a53b23f` | feat | 认证拦截器双轨化，取当前用户兼容 Token 与 Session | [10-Session到Token演进.md](10-Session到Token演进.md) |
 | `bc76175` | feat | 新增 Token 登录/登出接口供 AI 与第三方调用 | [10-Session到Token演进.md](10-Session到Token演进.md) |
+| `b79f2cd` | feat | 新增 horizonhub-ai 模块骨架与 Spring AI 配置 | [11-AI助手模块.md](11-AI助手模块.md) |
+| `3dd9450` | feat | 实现 AI 对话（检索增强 + SSE 流式）与论坛上下文检索 | [11-AI助手模块.md](11-AI助手模块.md) |
+| `6049ddc` | feat | 前端悬浮 AI 助手组件（流式对话、登录检测） | [11-AI助手模块.md](11-AI助手模块.md) |
 
 ## 第二阶段：Session → Token 演进（已完成）
 
