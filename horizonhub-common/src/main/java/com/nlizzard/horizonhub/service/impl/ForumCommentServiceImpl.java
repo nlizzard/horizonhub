@@ -297,6 +297,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
      *
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delComment(String commentIds) {
         String[] commentIdArray = commentIds.split(",");
         for (String commentIdStr : commentIdArray) {
@@ -348,6 +349,7 @@ public class ForumCommentServiceImpl implements ForumCommentService {
      * @param commentIds 评论 ID，逗号分割
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void auditComment(String commentIds) {
         String[] commentIdArray = commentIds.split(",");
         for (String commentIdStr : commentIdArray) {
