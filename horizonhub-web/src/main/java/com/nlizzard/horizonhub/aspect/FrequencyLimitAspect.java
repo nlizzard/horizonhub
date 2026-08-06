@@ -2,6 +2,7 @@ package com.nlizzard.horizonhub.aspect;
 
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.dto.LoginUserContext;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
 import com.nlizzard.horizonhub.entity.enums.DateTimePatternEnum;
@@ -17,6 +18,7 @@ import com.nlizzard.horizonhub.service.ForumCommentService;
 import com.nlizzard.horizonhub.service.LikeRecordService;
 import com.nlizzard.horizonhub.utils.DateUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
+import com.nlizzard.horizonhub.utils.TokenContextHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -164,10 +166,17 @@ public class FrequencyLimitAspect {
                 throw new BusinessException(ResponseCodeEnum.CODE_500);
             }
 
-            HttpServletRequest request = attributes.getRequest();
-            HttpSession session = request.getSession(false);
-            if (session != null) {
-                webUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+            // 双轨：优先 Token 上下文（拦截器已解析），回落 Session
+            LoginUserContext tokenContext = TokenContextHolder.get();
+            if (tokenContext != null) {
+                webUserDto = new SessionWebUserDto();
+                webUserDto.setUserId(tokenContext.getUserId());
+            } else {
+                HttpServletRequest request = attributes.getRequest();
+                HttpSession session = request.getSession(false);
+                if (session != null) {
+                    webUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+                }
             }
 
             // 有频率限制的操作必须有登录用户

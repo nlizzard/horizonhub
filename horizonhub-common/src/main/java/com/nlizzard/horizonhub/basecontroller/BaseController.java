@@ -1,11 +1,13 @@
 package com.nlizzard.horizonhub.basecontroller;
 
 import com.nlizzard.horizonhub.constants.Constants;
+import com.nlizzard.horizonhub.entity.dto.LoginUserContext;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.entity.vo.PaginationResultVO;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.utils.CopyTools;
+import com.nlizzard.horizonhub.utils.TokenContextHolder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
@@ -71,6 +73,15 @@ public class BaseController {
      * @return
      */
     protected SessionWebUserDto getUserInfoFromSession(HttpSession session) {
+        // 双轨：优先 Token 上下文（AI / 第三方 / 移动端），回落 Session（现有前端 cookie）
+        LoginUserContext tokenContext = TokenContextHolder.get();
+        if (tokenContext != null) {
+            SessionWebUserDto dto = new SessionWebUserDto();
+            dto.setUserId(tokenContext.getUserId());
+            dto.setNickName(tokenContext.getNickName());
+            dto.setAdmin(tokenContext.getIsAdmin());
+            return dto;
+        }
         return (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
     }
 
