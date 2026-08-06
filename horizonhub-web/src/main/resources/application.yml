@@ -3,15 +3,17 @@ server:
   port: 8080
   servlet:
     context-path: /api
-#mybatis:
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 默认使用 dev profile 以便本地开箱即用；生产环境通过 SPRING_PROFILES_ACTIVE=prod 覆盖。
+# 注意：dev profile 会激活开发自动登录后门（DevWebAutoLoginHandler），生产切勿使用 dev。
 spring:
-  # 数据库相关配置
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  # 数据库相关配置（密码等敏感项用 ${ENV:默认值} 外置，生产由环境变量注入）
   datasource:
-    url: jdbc:mysql://localhost:3306/horizonhub?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:horizonhub}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -33,32 +35,33 @@ spring:
         enabled: true
         url-pattern: /*
         exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+      # Druid 监控控制台默认关闭（生产环境严禁开启）；如需本地查看由环境变量开启
       stat-view-servlet:
-        enabled: true
+        enabled: ${DRUID_MONITOR_ENABLED:false}
         url-pattern: /druid/*
         reset-enable: false
-        login-username: nlizzard
-        login-password: nlizzard8023
+        login-username: ${DRUID_MONITOR_USERNAME:nlizzard}
+        login-password: ${DRUID_MONITOR_PASSWORD:nlizzard8023}
   # 发送邮件相关配置
   mail:
-    username: xxxx@qq.com
+    username: ${MAIL_USERNAME:xxxx@qq.com}
     host: smtp.qq.com
     port: 465
-    password: xxxx
+    password: ${MAIL_PASSWORD:xxxx}
     default-encoding: UTF-8
   freemarker:
     check-template-location: false
   data:
     redis:
-      host: 192.168.123.2
-      port: 6379
-      username:
-      password:
-      database: 0
+      host: ${REDIS_HOST:192.168.123.2}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
 # 是否使用邮箱验证码，false，验证码打印在控制台，true，发送邮件
 send:
   mail:
-    open: false
+    open: ${SEND_MAIL_OPEN:false}
 # ip地址查询接口（用于获取具体省份）
 ip:
   address:
@@ -67,13 +70,13 @@ ip:
         url: https://whois.pconline.com.cn/ipJson.jsp?json=true&ip=
 # 管理员邮箱地址（多个使用，分隔）
 admin:
-  emails: test111@qq.com
-# 是否处于开发模式，true，开发模式，false，生产模式
+  emails: ${ADMIN_EMAILS:test111@qq.com}
+# 开发模式相关（仅 dev profile 下由 DevWebAutoLoginHandler 使用，生产 profile 不生效）
 isDev:
   open: false
-  testUserEmail: test_123456@test.com
+  testUserEmail: ${DEV_TEST_EMAIL:test_123456@test.com}
 # 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
-projectFolder: E:/project/horizonhub
+projectFolder: ${PROJECT_FOLDER:E:/project/horizonhub}
 #内部接口相关
 log:
   root:

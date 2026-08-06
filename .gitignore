@@ -41,6 +41,10 @@ rebel.xml
 .env
 .env.*
 
+# 本地个人配置覆盖（含真实口令，切勿提交）
+**/application-local.yml
+**/application-local.yaml
+
 # Keep Maven wrapper and project files tracked
 !.mvn/
 !.mvn/wrapper/
