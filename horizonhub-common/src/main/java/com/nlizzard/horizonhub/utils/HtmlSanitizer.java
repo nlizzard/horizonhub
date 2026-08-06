@@ -21,7 +21,7 @@ public class HtmlSanitizer {
     /**
      * 论坛富文本白名单：relaxed（含图片、表格、列表、标题、链接等常用标签），保留相对路径。
      */
-    private static final Safelist SAFELIST = Safelist.relaxedWithImages()
+    private static final Safelist SAFELIST = Safelist.relaxed()
             .preserveRelativeLinks(true);
 
     /**
