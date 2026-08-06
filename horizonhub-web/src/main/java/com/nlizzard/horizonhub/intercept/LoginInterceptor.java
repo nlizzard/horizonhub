@@ -1,26 +1,18 @@
 package com.nlizzard.horizonhub.intercept;
 
-import cn.hutool.core.util.IdUtil;
 import com.nlizzard.horizonhub.annotation.GlobalInterceptor;
 import com.nlizzard.horizonhub.constants.Constants;
-import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
-import com.nlizzard.horizonhub.entity.enums.UserStatusEnum;
-import com.nlizzard.horizonhub.entity.pojo.UserInfo;
-import com.nlizzard.horizonhub.entity.query.UserInfoQuery;
 import com.nlizzard.horizonhub.exception.BusinessException;
-import com.nlizzard.horizonhub.service.UserInfoService;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
-
-import java.util.List;
 
 import static com.nlizzard.horizonhub.constants.Constants.SESSION_KEY;
 
@@ -28,11 +20,12 @@ import static com.nlizzard.horizonhub.constants.Constants.SESSION_KEY;
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
 
-    @Resource
-    private UserInfoService userInfoService;
-
-    @Resource
-    private WebConfig webConfig;
+    /**
+     * 开发环境自动登录处理器。仅 dev profile 下存在该 Bean；生产环境为 null，
+     * 因此 {@code isDev.open} 之类的布尔开关即便被误配也无法触发免登录后门。
+     */
+    @Autowired(required = false)
+    private DevWebAutoLoginHandler devWebAutoLoginHandler;
 
     @Override
     public boolean preHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
@@ -53,32 +46,12 @@ public class LoginInterceptor implements HandlerInterceptor {
         // 检验登录状态
         HttpSession session = request.getSession();
         SessionWebUserDto sessionUser = (SessionWebUserDto) session.getAttribute(SESSION_KEY);
-        if (sessionUser != null) return true;
-        // 如果配置文件写明是开发环境，则所有接口不校验是否已登录
-        if (webConfig.getIsDev()) {
-            // 查询是否已有用于开发环境的测试账号
-            UserInfoQuery userInfoQuery = new UserInfoQuery();
-            userInfoQuery.setEmail(webConfig.getDevTestEmail());
-            List<UserInfo> userInfoList = userInfoService.findListByParam(userInfoQuery);
-            UserInfo testUser = new UserInfo();
-            if (userInfoList.isEmpty()) {
-                // 没有则生成测试用户
-                testUser.setCurrentIntegral(10000);
-                testUser.setUserId(IdUtil.getSnowflakeNextIdStr());
-                testUser.setEmail(webConfig.getDevTestEmail());
-                testUser.setStatus(UserStatusEnum.ENABLE.getStatus());
-                testUser.setNickName("test");
-                userInfoService.add(testUser);
-            } else {
-                testUser = userInfoList.get(0);
-            }
-            sessionUser = new SessionWebUserDto();
-            sessionUser.setUserId(testUser.getUserId());
-            sessionUser.setNickName(testUser.getNickName());
-            sessionUser.setProvince("中国");
-            sessionUser.setAdmin(true);
-            session.setAttribute(Constants.SESSION_KEY, sessionUser);
+        if (sessionUser != null) {
             return true;
+        }
+        // 仅 dev profile 下 Bean 存在；生产环境 devWebAutoLoginHandler == null，此分支不可达
+        if (devWebAutoLoginHandler != null) {
+            return devWebAutoLoginHandler.createDevSession(session);
         }
         throw new BusinessException(ResponseCodeEnum.CODE_901);
     }
