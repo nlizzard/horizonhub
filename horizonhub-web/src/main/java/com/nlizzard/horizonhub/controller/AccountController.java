@@ -6,15 +6,18 @@ import com.nlizzard.horizonhub.annotation.VerifyParam;
 import com.nlizzard.horizonhub.basecontroller.BaseController;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.dto.CreateImageCode;
+import com.nlizzard.horizonhub.entity.dto.LoginUserContext;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
 import com.nlizzard.horizonhub.entity.dto.SysSetting4CommentDto;
 import com.nlizzard.horizonhub.entity.dto.SysSettingDto;
+import com.nlizzard.horizonhub.entity.enums.TokenScope;
 import com.nlizzard.horizonhub.entity.enums.VerifyRegexEnum;
 import com.nlizzard.horizonhub.entity.vo.ResponseVO;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import com.nlizzard.horizonhub.service.EmailCodeService;
 import com.nlizzard.horizonhub.service.UserInfoService;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
+import com.nlizzard.horizonhub.utils.TokenService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,6 +44,9 @@ public class AccountController extends BaseController {
 
     @Resource
     private SysCacheUtils sysCacheUtils;
+
+    @Resource
+    private TokenService tokenService;
 
     /**
      * 生成图片验证码
@@ -208,5 +214,45 @@ public class AccountController extends BaseController {
             // 重置密码成功后，清除登录注册的图片验证码，避免重复使用
             session.removeAttribute(Constants.CHECK_CODE_KEY);
         }
+    }
+
+    /**
+     * Token 登录接口（账号 + 密码，免图形验证码，供 AI / 第三方 / 移动端）。
+     * <p>
+     * 复用 {@code UserInfoService.login} 校验密码并刷新登录信息，签发 WEB 作用域 Token；
+     * 登录态存 Redis，可主动吊销。
+     *
+     * @param email    邮箱
+     * @param password 明文密码（必须走 HTTPS）
+     */
+    @PostMapping("/tokenLogin")
+    @GlobalInterceptor(checkParams = true)
+    public ResponseVO<Map<String, Object>> tokenLogin(HttpServletRequest request,
+                                                      @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
+                                                      @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD) String password) {
+        SessionWebUserDto dto = userInfoService.login(email, password, getIpAddr(request));
+        LoginUserContext context = new LoginUserContext();
+        context.setUserId(dto.getUserId());
+        context.setNickName(dto.getNickName());
+        context.setIsAdmin(dto.getAdmin());
+        context.setScope(TokenScope.WEB);
+        String token = tokenService.createToken(context);
+        Map<String, Object> result = new HashMap<>();
+        result.put("token", token);
+        result.put("userInfo", dto);
+        return getSuccessResponseVO(result);
+    }
+
+    /**
+     * Token 登出接口：吊销当前 Token（删除 Redis 登录态，立即失效）。
+     */
+    @PostMapping("/tokenLogout")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO<Void> tokenLogout(HttpServletRequest request) {
+        String header = request.getHeader(Constants.TOKEN_HEADER);
+        if (header != null && header.startsWith(Constants.TOKEN_PREFIX)) {
+            tokenService.invalidate(header.substring(Constants.TOKEN_PREFIX.length()).trim());
+        }
+        return getSuccessResponseVO(null);
     }
 }
