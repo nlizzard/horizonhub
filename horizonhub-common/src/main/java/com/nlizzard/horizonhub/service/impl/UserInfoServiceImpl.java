@@ -1,7 +1,6 @@
 package com.nlizzard.horizonhub.service.impl;
 
 import cn.hutool.core.util.IdUtil;
-import cn.hutool.crypto.SecureUtil;
 import com.nlizzard.horizonhub.constants.Constants;
 import com.nlizzard.horizonhub.entity.config.WebConfig;
 import com.nlizzard.horizonhub.entity.dto.SessionWebUserDto;
@@ -24,6 +23,7 @@ import com.nlizzard.horizonhub.service.UserMessageService;
 import com.nlizzard.horizonhub.utils.FileUtils;
 import com.nlizzard.horizonhub.utils.JsonUtils;
 import com.nlizzard.horizonhub.utils.OKHttpUtils;
+import com.nlizzard.horizonhub.utils.PasswordUtils;
 import com.nlizzard.horizonhub.utils.SysCacheUtils;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.ArrayUtils;
@@ -54,6 +54,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Resource
     private EmailCodeService emailCodeService;
+
+    @Resource
+    private PasswordUtils passwordUtils;
 
     @Resource
     private UserIntegralRecordMapper<UserIntegralRecord, UserIntegralRecordQuery> userIntegralRecordMapper;
@@ -232,7 +235,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         userInfo.setUserId(userId);
         userInfo.setNickName(nickName);
         userInfo.setEmail(email);
-        userInfo.setPassword(SecureUtil.md5(password));
+        userInfo.setPassword(passwordUtils.encode(password));
         userInfo.setJoinTime(new Date());
         userInfo.setStatus(UserStatusEnum.ENABLE.getStatus());
         userInfo.setTotalIntegral(0);
@@ -302,8 +305,14 @@ public class UserInfoServiceImpl implements UserInfoService {
     @Override
     public SessionWebUserDto login(String email, String password, String ipAddress) {
         UserInfo userInfo = this.userInfoMapper.selectByEmail(email);
-        if (null == userInfo || !userInfo.getPassword().equals(password)) {
+        if (null == userInfo || !passwordUtils.matches(password, userInfo.getPassword())) {
             throw new BusinessException("账号或者密码错误");
+        }
+        // 惰性升级：旧版无盐 MD5 校验通过后，重新加密为 BCrypt
+        if (passwordUtils.isLegacyMd5(userInfo.getPassword())) {
+            UserInfo upgrade = new UserInfo();
+            upgrade.setPassword(passwordUtils.encode(password));
+            this.userInfoMapper.updateByUserId(upgrade, userInfo.getUserId());
         }
         if (UserStatusEnum.DISABLE.getStatus().equals(userInfo.getStatus())) {
             throw new BusinessException("账号已禁用");
@@ -363,7 +372,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         emailCodeService.checkCode(email, emailCode);
 
         UserInfo updateInfo = new UserInfo();
-        updateInfo.setPassword(SecureUtil.md5(password));
+        updateInfo.setPassword(passwordUtils.encode(password));
         this.userInfoMapper.updateByEmail(updateInfo, email);
     }
 

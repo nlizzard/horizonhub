@@ -70,7 +70,6 @@
 </template>
 
 <script setup>
-import md5 from "js-md5";
 import { getCurrentInstance, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -116,8 +115,8 @@ const login = () => {
     if (!valid) {
       return;
     }
+    // 直接发送明文口令，服务端比对（必须走 HTTPS）
     let params = Object.assign({}, formData);
-    params.password = md5(params.password);
     let result = await proxy.Request({
       url: api.login,
       params: params,

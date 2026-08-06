@@ -250,7 +250,6 @@
 import { ref, reactive, getCurrentInstance, nextTick } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useStore } from "vuex";
-import md5 from "js-md5";
 const { proxy } = getCurrentInstance();
 const router = useRouter();
 const route = useRoute();
@@ -405,11 +404,14 @@ const resetForm = () => {
     formDataRef.value.resetFields();
     formData.value = {};
 
-    //登录
+    //登录：仅回填邮箱（cookie 不再保存口令，明文/哈希均不存）
     if (opType.value == 1) {
       const cookieLoginInfo = proxy.VueCookies.get("loginInfo");
       if (cookieLoginInfo) {
-        formData.value = cookieLoginInfo;
+        formData.value = {
+          email: cookieLoginInfo.email,
+          rememberMe: cookieLoginInfo.rememberMe,
+        };
       }
     }
   });
@@ -429,15 +431,7 @@ const doSubmit = () => {
       delete params.registerPassword;
       delete params.reRegisterPassword;
     }
-    //登录
-    if (opType.value == 1) {
-      let cookieLoginInfo = proxy.VueCookies.get("loginInfo");
-      let cookiePassword =
-        cookieLoginInfo == null ? null : cookieLoginInfo.password;
-      if (params.password !== cookiePassword) {
-        params.password = md5(params.password);
-      }
-    }
+    //登录：直接发送明文口令，服务端用 BCrypt 校验（必须走 HTTPS）
     let url = null;
     if (opType.value == 0) {
       url = api.register;
@@ -465,7 +459,6 @@ const doSubmit = () => {
       if (params.rememberMe) {
         const loginInfo = {
           email: params.email,
-          password: params.password,
           rememberMe: params.rememberMe,
         };
         proxy.VueCookies.set("loginInfo", loginInfo, "7d");
