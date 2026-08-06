@@ -198,7 +198,7 @@ public class AccountController extends BaseController {
      * @param emailCode 邮箱验证码
      */
     @PostMapping("/resetPwd")
-    @GlobalInterceptor(checkParams = true, checkLogin = true)
+    @GlobalInterceptor(checkParams = true)
     public ResponseVO<Void> resetPwd(HttpSession session,
                                      @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL) String email,
                                      @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
