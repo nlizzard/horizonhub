@@ -27,6 +27,7 @@ import EditorHtml from "@/components/EditorHtml.vue"
 import EditorMarkdown from "@/components/EditorMarkdown.vue"
 import CoverUpload from "@/components/CoverUpload.vue"
 import AttachmentSelector from "@/components/AttachmentSelector.vue"
+import AiAssistant from "@/components/AiAssistant.vue"
 const app = createApp(App)
 app.use(router)
 app.use(store)
@@ -53,4 +54,5 @@ app.component("EditorHtml", EditorHtml);
 app.component("EditorMarkdown", EditorMarkdown);
 app.component("CoverUpload", CoverUpload);
 app.component("AttachmentSelector", AttachmentSelector);
+app.component("AiAssistant", AiAssistant);
 app.mount('#app')

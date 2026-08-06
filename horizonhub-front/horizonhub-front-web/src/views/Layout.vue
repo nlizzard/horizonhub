@@ -277,6 +277,8 @@
     <LoginAndRegister ref="loginRegisterRef"></LoginAndRegister>
     <!--回到顶部-->
     <el-backtop :right="50" :bottom="100"></el-backtop>
+    <!--AI 助手悬浮入口-->
+    <AiAssistant></AiAssistant>
   </div>
 </template>
 
