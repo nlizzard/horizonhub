@@ -27,6 +27,13 @@
 | `dc2bf33` | refactor | orderBy 排序字段白名单校验，消除 SQL 注入面 | [07-orderBy白名单.md](07-orderBy白名单.md) |
 | `fa888fb` | feat | 引入 JSR-303 校验基础设施与全局异常增强 | [09-JSR303校验.md](09-JSR303校验.md) |
 | `b0787ad` | fix | HtmlSanitizer 改用 Safelist.relaxed 适配 jsoup 1.17 API | [06-富文本XSS净化.md](06-富文本XSS净化.md) |
+| `eb6fdd6` | feat | 引入 Token 基础设施（jjwt + Redis 有状态 Token） | [10-Session到Token演进.md](10-Session到Token演进.md) |
+| `a53b23f` | feat | 认证拦截器双轨化，取当前用户兼容 Token 与 Session | [10-Session到Token演进.md](10-Session到Token演进.md) |
+| `bc76175` | feat | 新增 Token 登录/登出接口供 AI 与第三方调用 | [10-Session到Token演进.md](10-Session到Token演进.md) |
+
+## 第二阶段：Session → Token 演进（已完成）
+
+第一阶段清理了引入 AI 前的安全 / 架构债务；第二阶段着手**认证演进**，为 AI 服务铺路。采用 **双轨 + Redis 有状态 Token**：现有前端继续 Session（零改动），AI / 第三方走 `Authorization: Bearer <token>`，登录态存 Redis（可主动吊销）。详见 [10-Session到Token演进.md](10-Session到Token演进.md)。
 
 ## 编译验证
 
