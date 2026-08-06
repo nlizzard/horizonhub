@@ -9,8 +9,12 @@ server:
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  # 未配置 AI_API_KEY 时排除 Spring AI 自动配置，避免其在启动期强制校验 api-key 导致启动失败。
+  # 有 key 时设 AI_EXCLUDE 为空（或对应环境变量不排除），让 Spring AI 正常装配 ChatModel。
+  autoconfigure:
+    exclude:
+      - ${AI_EXCLUDE:org.springframework.ai.model.openai.autoconfigure.OpenAiChatAutoConfiguration}
   # AI 助手（Spring AI，OpenAI 兼容端点；dev 默认指向 DeepSeek，可换通义/Kimi 等）
-  # 启用条件：AI_API_KEY 注入后才会真实调用；未注入时 AI 接口返回未配置提示
   ai:
     openai:
       base-url: ${AI_BASE_URL:https://api.deepseek.com}

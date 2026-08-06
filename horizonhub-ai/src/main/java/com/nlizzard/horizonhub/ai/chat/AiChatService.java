@@ -2,7 +2,6 @@ package com.nlizzard.horizonhub.ai.chat;
 
 import com.nlizzard.horizonhub.ai.config.AiConfig;
 import com.nlizzard.horizonhub.ai.context.ForumContextService;
-import com.nlizzard.horizonhub.entity.enums.ResponseCodeEnum;
 import com.nlizzard.horizonhub.exception.BusinessException;
 import jakarta.annotation.Resource;
 import org.slf4j.Logger;
@@ -12,6 +11,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -36,7 +36,11 @@ public class AiChatService {
     /** SSE 超时（LLM 生成可能较慢，给 120 秒） */
     private static final long SSE_TIMEOUT = 120_000L;
 
-    @Resource
+    /**
+     * ChatModel 可选注入：未配置 AI_API_KEY 时为 null（AiConfig 不装配该 bean），
+     * 此时 AI 接口返回「未配置」提示，系统其余功能不受影响。
+     */
+    @Autowired(required = false)
     private ChatModel chatModel;
 
     @Resource
@@ -52,11 +56,18 @@ public class AiChatService {
      * @return SSE 流
      */
     public SseEmitter streamChat(String userMessage) {
-        if (!aiConfig.isEnabled()) {
-            throw new BusinessException(ResponseCodeEnum.CODE_600.getCode(), "AI 助手未配置（缺少 AI_API_KEY）");
-        }
-
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
+
+        // 未配置 ChatModel（缺 AI_API_KEY）：通过 SSE 返回提示而非抛异常，前端友好展示
+        if (chatModel == null) {
+            try {
+                emitter.send(SseEmitter.event().data("[ERROR] AI 助手未配置（缺少 AI_API_KEY）"));
+            } catch (IOException e) {
+                logger.warn("SSE 发送失败：{}", e.getMessage());
+            }
+            emitter.complete();
+            return emitter;
+        }
 
         // 组装 prompt：系统提示词 + 论坛上下文 + 用户提问
         String systemPrompt = forumContextService.buildSystemPrompt();
