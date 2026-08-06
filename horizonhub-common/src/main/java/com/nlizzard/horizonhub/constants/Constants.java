@@ -48,4 +48,9 @@ public class Constants {
     public static final String STATUS_SUCCESS = "success";
     // 频率计数的前缀key
     public static final String FREQUENCY_KEY = "horizonHub:frequency_key";
+    // Token 登录态在 Redis 中的 key 前缀，完整 key 为 horizonHub:token:{tokenId}
+    public static final String TOKEN_REDIS_KEY_PREFIX = "horizonHub:token:";
+    // 请求头中的认证 scheme：Authorization: Bearer <token>
+    public static final String TOKEN_HEADER = "Authorization";
+    public static final String TOKEN_PREFIX = "Bearer ";
 }

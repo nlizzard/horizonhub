@@ -80,6 +80,11 @@ isDev:
   testUserEmail: ${DEV_TEST_EMAIL:test_123456@test.com}
 # 项目根目录，用于拼接对应文件夹前缀拿到论文相关文件（附件等）存放位置
 projectFolder: ${PROJECT_FOLDER:E:/project/horizonhub}
+# Token（JWT 外壳 + Redis 登录态）配置；dev 默认密钥仅供本地，生产用 TOKEN_SECRET 注入强随机值
+token:
+  secret: ${TOKEN_SECRET:horizonhub-dev-secret-key-please-change-in-production-32bytes}
+  ttl-minutes: ${TOKEN_TTL_MINUTES:10080}
+  issuer: ${TOKEN_ISSUER:horizonhub}
 log:
   root:
     level: INFO

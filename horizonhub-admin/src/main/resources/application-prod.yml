@@ -37,6 +37,12 @@ admin:
 
 projectFolder: ${PROJECT_FOLDER}
 
+# Token 密钥：无默认值，缺失即启动失败（fail-fast），务必通过 TOKEN_SECRET 注入强随机值
+token:
+  secret: ${TOKEN_SECRET}
+  ttl-minutes: ${TOKEN_TTL_MINUTES:10080}
+  issuer: ${TOKEN_ISSUER:horizonhub}
+
 send:
   mail:
     open: true
