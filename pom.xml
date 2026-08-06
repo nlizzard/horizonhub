@@ -19,6 +19,7 @@
         <module>horizonhub-common</module>
         <module>horizonhub-web</module>
         <module>horizonhub-admin</module>
+        <module>horizonhub-ai</module>
     </modules>
 
     <properties>
@@ -27,6 +28,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <logback.version>1.5.25</logback.version>
         <spring-boot.version>3.5.12</spring-boot.version>
+        <spring-ai.version>1.0.9</spring-ai.version>
         <mybatis.version>3.0.5</mybatis.version>
         <mysql.version>9.6.0</mysql.version>
         <aspectjweaver.version>1.9.24</aspectjweaver.version>
@@ -42,6 +44,14 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring AI BOM -->
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <!-- logback -->
             <dependency>
                 <groupId>ch.qos.logback</groupId>

@@ -9,6 +9,16 @@ server:
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  # AI 助手（Spring AI，OpenAI 兼容端点；dev 默认指向 DeepSeek，可换通义/Kimi 等）
+  # 启用条件：AI_API_KEY 注入后才会真实调用；未注入时 AI 接口返回未配置提示
+  ai:
+    openai:
+      base-url: ${AI_BASE_URL:https://api.deepseek.com}
+      api-key: ${AI_API_KEY:}
+      chat:
+        options:
+          model: ${AI_MODEL:deepseek-chat}
+          temperature: ${AI_TEMPERATURE:0.5}
   # 数据库相关配置（密码等敏感项用 ${ENV:默认值} 外置，生产由环境变量注入）
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:horizonhub}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
