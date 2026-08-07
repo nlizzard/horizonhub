@@ -28,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -348,7 +349,10 @@ public class ForumArticleController extends BaseController {
      * @param response
      * @param fileId   附件文件 ID
      */
-    @PostMapping("/attachmentDownload")
+    // 注意：附件下载必须用 GET。浏览器通过 <a href> / window.open 触发下载，
+    // POST 响应无法作为文件下载。故此接口保留 GET（与写操作改 POST 的 CSRF 防护不冲突：
+    // 下载虽有扣积分副作用，但由登录态保护；纯 GET 文件流）。
+    @GetMapping("/attachmentDownload")
     @GlobalInterceptor(checkLogin = true, checkParams = true)
     public void attachmentDownload(HttpSession session, HttpServletRequest request, HttpServletResponse response,
                                    @VerifyParam(required = true) String fileId) {

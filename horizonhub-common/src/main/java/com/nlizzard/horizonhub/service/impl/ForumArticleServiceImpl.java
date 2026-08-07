@@ -226,12 +226,15 @@ public class ForumArticleServiceImpl implements ForumArticleService {
             String replaceMonth = "/" + month + "/";
             content = content.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
             article.setContent(content);
-            // markdown内容也进行同样的处理
-            String markdownContent = article.getMarkdownContent();
-            if (!StringUtils.isBlank(markdownContent)) {
-                markdownContent = markdownContent.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
-                article.setMarkdownContent(markdownContent);
-            }
+        }
+        // markdown 正文独立处理图片路径（纯 Markdown 帖子的富文本 content 为空，
+        // 不能嵌套在上面 if 里，否则 temp 图片不会被移动、路径不会被替换，导致图片不显示）
+        String markdownContent = article.getMarkdownContent();
+        if (!StringUtils.isBlank(markdownContent)) {
+            String mdMonth = imageUtils.resetImagePathInMarkdown(markdownContent);
+            String mdReplaceMonth = "/" + mdMonth + "/";
+            markdownContent = markdownContent.replace("/" + Constants.FILE_FOLDER_TEMP + "/", mdReplaceMonth);
+            article.setMarkdownContent(markdownContent);
         }
 
         this.forumArticleMapper.insert(article);
@@ -409,11 +412,14 @@ public class ForumArticleServiceImpl implements ForumArticleService {
             String replaceMonth = "/" + month + "/";
             content = content.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
             article.setContent(content);
-            String markdownContent = article.getMarkdownContent();
-            if (!StringUtils.isBlank(markdownContent)) {
-                markdownContent = markdownContent.replace("/" + Constants.FILE_FOLDER_TEMP + "/", replaceMonth);
-                article.setMarkdownContent(markdownContent);
-            }
+        }
+        // markdown 正文独立处理图片路径（见 postArticle 同款说明）
+        String markdownContent = article.getMarkdownContent();
+        if (!StringUtils.isBlank(markdownContent)) {
+            String mdMonth = imageUtils.resetImagePathInMarkdown(markdownContent);
+            String mdReplaceMonth = "/" + mdMonth + "/";
+            markdownContent = markdownContent.replace("/" + Constants.FILE_FOLDER_TEMP + "/", mdReplaceMonth);
+            article.setMarkdownContent(markdownContent);
         }
 
 

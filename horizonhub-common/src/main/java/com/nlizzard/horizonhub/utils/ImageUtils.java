@@ -42,6 +42,24 @@ public class ImageUtils {
         return month;
     }
 
+    /**
+     * 处理 Markdown 正文图片：将 temp 临时图片移动到正式月份目录，并返回月份名。
+     * <p>
+     * Markdown 图片语法为 {@code ![alt](url)}，与 HTML 的 {@code <img src>} 不同，
+     * 不能复用 {@link #getImageList(String)}（它只匹配 img 标签）。本方法单独匹配
+     * Markdown 图片 URL，保证纯 Markdown 帖子的图片也能被正确移动、路径替换。
+     *
+     * @param markdown 原始 Markdown 内容
+     * @return 月份文件夹名称（格式：yyyyMM）
+     */
+    public String resetImagePathInMarkdown(String markdown) {
+        String month = DateUtil.format(new Date(), DateTimePatternEnum.YYYYMM.getPattern());
+        List<String> imageList = getMarkdownImageList(markdown);
+        for (String img : imageList) {
+            resetImagePath(img, month);
+        }
+        return month;
+    }
 
     /**
      * 将临时文件夹中的文章图片移动到正式文件夹中
@@ -86,6 +104,32 @@ public class ImageUtils {
                 String imageUrl = m.group(1);
                 imageList.add(imageUrl);
             }
+        }
+        return imageList;
+    }
+
+    /**
+     * 从 Markdown 内容中提取图片 URL 列表，匹配 {@code ![alt](url)} 语法。
+     *
+     * @param markdown Markdown 内容
+     * @return 图片 URL 列表
+     */
+    private List<String> getMarkdownImageList(String markdown) {
+        List<String> imageList = new ArrayList<>();
+        if (StringUtils.isBlank(markdown)) {
+            return imageList;
+        }
+        // 匹配 ![任意](url)，捕获 url 部分
+        Pattern pattern = Pattern.compile("!\\[[^\\]]*\\]\\(([^)]+)\\)");
+        Matcher matcher = pattern.matcher(markdown);
+        while (matcher.find()) {
+            String url = matcher.group(1).trim();
+            // markdown 图片 url 可能带 " 标题"，取空格前的部分
+            int spaceIdx = url.indexOf(" ");
+            if (spaceIdx > 0) {
+                url = url.substring(0, spaceIdx);
+            }
+            imageList.add(url);
         }
         return imageList;
     }
