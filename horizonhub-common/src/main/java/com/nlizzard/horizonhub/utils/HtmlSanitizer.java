@@ -19,6 +19,11 @@ import org.springframework.stereotype.Component;
 public class HtmlSanitizer {
 
     /**
+     * 用于校验相对 URL 的安全基准地址。该地址不会写入已净化的正文，因为白名单配置会保留相对路径。
+     */
+    private static final String SANITIZE_BASE_URI = "https://horizonhub.invalid/";
+
+    /**
      * 论坛富文本白名单：relaxed（含图片、表格、列表、标题、链接等常用标签），保留相对路径。
      */
     private static final Safelist SAFELIST = Safelist.relaxed()
@@ -31,6 +36,8 @@ public class HtmlSanitizer {
         if (html == null || html.isEmpty()) {
             return html;
         }
-        return Jsoup.clean(html, SAFELIST);
+        // Jsoup 校验 URL 协议时需要基准地址解析相对路径；未提供 baseUri 会将
+        // /api/file/getImage/temp/xxx.jpg 判为无效并删除 src，后续图片迁移也随之失效。
+        return Jsoup.clean(html, SANITIZE_BASE_URI, SAFELIST);
     }
 }

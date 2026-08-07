@@ -124,10 +124,17 @@
         </dependency>
 
         <!-- 富文本 XSS 净化：白名单清洗文章/评论正文 HTML -->
+        <!-- 富文本 XSS 净化：白名单清洗文章/评论正文 HTML -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
             <version>1.17.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- JWT：Token 作为「载 tokenId + 防伪造」的外壳，真正登录态存 Redis -->
